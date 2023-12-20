@@ -46,7 +46,7 @@ plugins:
   - table-reader
 
 nav:
-  - Home: home.md
+  - Home: index.md
 #  - Design: design.md
 #  - API: api.md
 
@@ -62,7 +62,6 @@ markdown_extensions:
   - admonition
   - codehilite:
       linenums: true
-#  - fontawesome_markdown
   - meta
   - pymdownx.inlinehilite
   - pymdownx.tasklist:

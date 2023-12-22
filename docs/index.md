@@ -56,13 +56,31 @@ Installing the Met Council Wrangler package will also install the following pack
 * Plus numerous other packages that are dependencies of the above packages.
 
 ## Typical Usage
-The following flowcharts illustrate typical uses cases of the Council's network tools.
+The following flowcharts and Jupyter notebooks illustrate typical uses cases of the Council's network tools.
 
-### Use Case #1: Network Creation
+### Typical Use #1: Network Creation
 ![](assets/use_case_01_flowchart.png)
 
-### Use Case #2: Creating a Cube Network
+[NOTEBOOK or CODE SNIPPET TO BE ADDED]
+
+### Typical Use #2: Creating a Cube Network
 ![](assets/use_case_02_flowchart.png)
 
-### Use Case #3: Creating a Project Card from a Cube Log File
+[NOTEBOOK or CODE SNIPPET TO BE ADDED]
+
+### Typical Use #3: Creating a Project Card from a Cube Log File
 ![](assets/use_case_03_flowchart.png)
+
+[NOTEBOOK or CODE SNIPPET TO BE ADDED]
+
+### Typical Use #4: Creating a Project Card from Two Cube LIN Files
+![](assets/use_case_04_flowchart.png)
+
+[NOTEBOOK or CODE SNIPPET TO BE ADDED]
+
+### Typical Use #5: Applying Project Cards to create a Scenario Network
+![](assets/use_case_05_flowchart.png)
+
+[NOTEBOOK or CODE SNIPPET TO BE ADDED]
+
+

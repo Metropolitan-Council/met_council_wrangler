@@ -47,8 +47,7 @@ plugins:
 
 nav:
   - Home: index.md
-#  - Design: design.md
-#  - API: api.md
+  - API: api.md
 
 extra:
   version:

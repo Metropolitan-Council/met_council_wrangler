@@ -13,7 +13,7 @@ Welcome to the Met Council Network Creation and Management site. The Council's n
     * Defines network edits in a human- and computer-readable format (see the Project Card specification below). 
     * Allows projects to be coded once (and corrected once) and then applied dozens if not hundreds of times when creating scenarios. 
     * Allows the Council to maintain a single base network and then sequentially apply projects to the base network to create forecast year or scenario networks. 
-    * Allows Council staff to code separate projects at the same time (see the Project Card Registry description below for additional details.
+    * Allows Council staff to code separate projects at the same time (see the Project Card Registry description below for additional details).
     * Allows Council staff to add metadata to project definitions. 
     * Facilitates network auditing, i.e., the software can tell you which projects are in any given scenario network.
     * Allows for the rapid creation of and corrections to dozens of networks.
@@ -39,12 +39,12 @@ Welcome to the Met Council Network Creation and Management site. The Council's n
 
 The Met Council Wrangler package is available on PyPI. If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
-An example instalion using conda in the command line is as follows:
+An example installation using conda in the command line is as follows:
 
 ```bash
 conda config --add channels conda-forge
-conda create python=3.10 rtree geopandas osmnx -n <your_environment_name>
-conda activate <your_environment_name>
+conda create python=3.10 rtree geopandas osmnx -n your_environment_name
+conda activate your_environment_name
 pip install met_council_wrangler
 ```
 

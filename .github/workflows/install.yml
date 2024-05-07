@@ -50,7 +50,7 @@ jobs:
           cd cube_wrangler
           pip install .
           cd ..
-      - name: Install met council Wrangler
+      - name: Install met council wrangler
         run: |
           cd met_council_wrangler
           pip install .
@@ -58,14 +58,12 @@ jobs:
       - name: Verify network wrangler installation
         run: |
           python -c "import network_wrangler; print(network_wrangler.__version__)"
-      - name: Verify cube wrangler installation
-        run: |
-          python -c "import cube_wrangler; print(cube_wrangler.__version__)"
-      - name: Verify cube wrangler installation
-        run: |
-          python -c "import met_council_wrangler; print(met_council_wrangler.__version__)"
       - name: Lint with Black
         run: |
           # stop the build if there are problems
           black --check --diff --exclude "/.*network_wrangler.*/" .
           black --check --diff --exclude "/.*cube_wrangler.*/" .
+      - name: Test met_council_wrangler.tests
+        run: |
+          cd met_council_wrangler/tests
+          pytest .

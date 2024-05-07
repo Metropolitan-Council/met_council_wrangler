@@ -61,7 +61,7 @@ jobs:
       - name: Lint with Black
         run: |
           # stop the build if there are problems
-          black --check --diff --color --include ".*met_council_wrangler.*" .
+          black --check --diff --color --exclude "/.*network_wrangler.*/" --extend-exclude "/.*cube_wrangler.*/" .
       - name: Test met_council_wrangler.tests
         run: |
           cd met_council_wrangler/tests

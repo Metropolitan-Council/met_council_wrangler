@@ -93,8 +93,12 @@ def roadway_standard_to_met_council_network(
     roadway_net.links_metcouncil_df = roadway_net.links_metcouncil_df.to_crs(epsg=26915)
     roadway_net.nodes_metcouncil_df = roadway_net.nodes_metcouncil_df.to_crs(epsg=26915)
 
-    roadway_net.nodes_metcouncil_df["X"] = roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.x)
-    roadway_net.nodes_metcouncil_df["Y"] = roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.y)
+    roadway_net.nodes_metcouncil_df["X"] = (
+        roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.x)
+    )
+    roadway_net.nodes_metcouncil_df["Y"] = (
+        roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.y)
+    )
 
     # CUBE expect node id to be N
     roadway_net.nodes_metcouncil_df.rename(columns={"model_node_id": "N"}, inplace=True)
@@ -497,7 +501,6 @@ def add_counts(
     mndot_count_variable_shp=None,
     widot_count_variable_shp=None,
 ):
-
     """
     Adds count variable.
 

@@ -3,7 +3,6 @@ from cube_wrangler.logger import WranglerLogger
 from cube_wrangler import Parameters
 
 
-
 def get_base_dir(metcouncil_wrangler_base_dir=os.getcwd()):
     d = metcouncil_wrangler_base_dir
     for i in range(3):
@@ -319,7 +318,7 @@ class MetCouncil_Parameters(Parameters):
             "county",
             "centroidconnect",
         ]
-        
+
         self.output_variables = [
             "model_link_id",
             "link_id",

@@ -110,11 +110,12 @@ def roadway_standard_to_met_council_network(
 
     # CUBE expect node id to be N
     roadway_net.nodes_metcouncil_df.rename(columns={"model_node_id": "N"}, inplace=True)
-    
+
     roadway_net.links_df = roadway_net.links_metcouncil_df
     roadway_net.nodes_df = roadway_net.nodes_metcouncil_df
 
     return roadway_net
+
 
 def calculate_area_type(
     roadway_net=None,
@@ -677,11 +678,12 @@ def add_counts(
 
     return roadway_net
 
+
 def calculate_hov(
     roadway_net=None,
-    parameters=None, 
-    network_variable="HOV", 
-    as_integer=True, 
+    parameters=None,
+    network_variable="HOV",
+    as_integer=True,
     overwrite=False,
 ):
     """
@@ -741,19 +743,21 @@ def calculate_hov(
     roadway_net.links_df[network_variable] = 0
 
     roadway_net.links_df.loc[
-        (roadway_net.links_df["assign_group"] == 8) | (roadway_net.links_df["access"] == "hov"),
+        (roadway_net.links_df["assign_group"] == 8)
+        | (roadway_net.links_df["access"] == "hov"),
         network_variable,
     ] = 100
 
     if as_integer:
-        roadway_net.links_df[network_variable] = roadway_net.links_df[network_variable].astype(
-            int
-        )
+        roadway_net.links_df[network_variable] = roadway_net.links_df[
+            network_variable
+        ].astype(int)
     WranglerLogger.info(
         "Finished calculating hov variable: {}".format(network_variable)
     )
 
     return roadway_net
+
 
 def calculate_number_of_lanes(
     roadway_net=None,
@@ -806,9 +810,7 @@ def calculate_number_of_lanes(
         raise ValueError(msg)
 
     lanes_lookup_file = (
-        lanes_lookup_file
-        if lanes_lookup_file
-        else parameters.lanes_lookup_file
+        lanes_lookup_file if lanes_lookup_file else parameters.lanes_lookup_file
     )
     if not lanes_lookup_file:
         msg = "'lanes_lookup_file' not found in method or lasso parameters.".format(
@@ -818,7 +820,9 @@ def calculate_number_of_lanes(
         raise ValueError(msg)
 
     centroid_connect_lanes = (
-        centroid_connect_lanes if centroid_connect_lanes else parameters.centroid_connect_lanes
+        centroid_connect_lanes
+        if centroid_connect_lanes
+        else parameters.centroid_connect_lanes
     )
 
     update_lanes = False
@@ -830,7 +834,7 @@ def calculate_number_of_lanes(
                     network_variable
                 )
             )
-            roadway_net.links_df = roadway_net.links_df.drop([network_variable], axis = 1)
+            roadway_net.links_df = roadway_net.links_df.drop([network_variable], axis=1)
         else:
             WranglerLogger.info(
                 "Number of lanes variable '{}' updated for some links. Returning without overwriting for those links. Calculating for other links".format(
@@ -847,7 +851,7 @@ def calculate_number_of_lanes(
         roadway_net=roadway_net,
         parameters=parameters,
         number_of_lanes=centroid_connect_lanes,
-        )
+    )
 
     WranglerLogger.debug(
         "Computing number lanes using: {}".format(
@@ -870,13 +874,13 @@ def calculate_number_of_lanes(
                 return int(centroid_connect_lanes)
             elif x.drive_access == 0:
                 return int(0)
-            elif max([x.anoka, x.hennepin, x.carver, x.dakota, x.washington])>0:
+            elif max([x.anoka, x.hennepin, x.carver, x.dakota, x.washington]) > 0:
                 return int(max([x.anoka, x.hennepin, x.carver, x.dakota, x.washington]))
-            elif max([x.widot, x.mndot])>0:
+            elif max([x.widot, x.mndot]) > 0:
                 return int(max([x.widot, x.mndot]))
-            elif x.osm_min>0:
+            elif x.osm_min > 0:
                 return int(x.osm_min)
-            elif x.naive>0:
+            elif x.naive > 0:
                 return int(x.naive)
             else:
                 return int(0)
@@ -888,7 +892,7 @@ def calculate_number_of_lanes(
         join_df[var_name] = join_df.apply(lambda x: _set_lanes(x), axis=1)
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_df[['model_link_id', var_name]],
+            join_df[["model_link_id", var_name]],
             how="left",
             on="model_link_id",
         )
@@ -902,7 +906,7 @@ def calculate_number_of_lanes(
         join_df[network_variable] = join_df.apply(lambda x: _set_lanes(x), axis=1)
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_df[['model_link_id', network_variable]],
+            join_df[["model_link_id", network_variable]],
             how="left",
             on="model_link_id",
         )
@@ -912,6 +916,7 @@ def calculate_number_of_lanes(
     )
 
     return roadway_net
+
 
 def calculate_number_of_lanes_from_reviewed_network(
     roadway_net=None,
@@ -964,11 +969,7 @@ def calculate_number_of_lanes_from_reviewed_network(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    osm_lanes_file = (
-        osm_lanes_file
-        if osm_lanes_file
-        else parameters.osm_lanes_file
-    )
+    osm_lanes_file = osm_lanes_file if osm_lanes_file else parameters.osm_lanes_file
     if not osm_lanes_file:
         msg = "'osm_lanes_file' not found in method or lasso parameters.".format(
             osm_lanes_file
@@ -976,14 +977,12 @@ def calculate_number_of_lanes_from_reviewed_network(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    metc_lanes_file = (
-        metc_lanes_file
-        if metc_lanes_file
-        else parameters.metc_lanes_file
-    )
+    metc_lanes_file = metc_lanes_file if metc_lanes_file else parameters.metc_lanes_file
 
     centroid_connect_lanes = (
-        centroid_connect_lanes if centroid_connect_lanes else parameters.centroid_connect_lanes
+        centroid_connect_lanes
+        if centroid_connect_lanes
+        else parameters.centroid_connect_lanes
     )
 
     update_lanes = False
@@ -995,7 +994,7 @@ def calculate_number_of_lanes_from_reviewed_network(
                     network_variable
                 )
             )
-            roadway_net.links_df = roadway_net.links_df.drop([network_variable], axis = 1)
+            roadway_net.links_df = roadway_net.links_df.drop([network_variable], axis=1)
         else:
             WranglerLogger.info(
                 "Number of lanes variable '{}' updated for some links. Returning without overwriting for those links. Calculating for other links".format(
@@ -1012,7 +1011,7 @@ def calculate_number_of_lanes_from_reviewed_network(
         roadway_net=roadway_net,
         parameters=parameters,
         number_of_lanes=centroid_connect_lanes,
-        )
+    )
 
     WranglerLogger.debug(
         "Computing number lanes using: {} and {}".format(
@@ -1025,14 +1024,14 @@ def calculate_number_of_lanes_from_reviewed_network(
 
     join_df = pd.merge(
         roadway_net.links_df,
-        osm_lanes_df[['shstReferenceId', 'osm_lanes_min', 'osm_lanes_max']],
+        osm_lanes_df[["shstReferenceId", "osm_lanes_min", "osm_lanes_max"]],
         how="left",
         on="shstReferenceId",
     )
 
     join_df = pd.merge(
         join_df,
-        metc_lanes_df[['shstReferenceId', 'lanes_metc_min', 'lanes_metc_max']],
+        metc_lanes_df[["shstReferenceId", "lanes_metc_min", "lanes_metc_max"]],
         how="left",
         on="shstReferenceId",
     )
@@ -1041,14 +1040,14 @@ def calculate_number_of_lanes_from_reviewed_network(
         if x.lanes_metc_min > 0:
             if x.lanes_metc_min == x.lanes_metc_max:
                 return x.lanes_metc_min
-            elif x.roadway in ['motorway', 'trunk', 'primary', 'secondary']:
+            elif x.roadway in ["motorway", "trunk", "primary", "secondary"]:
                 return x.lanes_metc_max
             else:
                 return x.lanes_metc_min
         elif x.osm_lanes_min > 0:
             if x.osm_lanes_min == x.osm_lanes_max:
                 return x.osm_lanes_min
-            elif x.roadway in ['motorway', 'trunk', 'primary', 'secondary']:
+            elif x.roadway in ["motorway", "trunk", "primary", "secondary"]:
                 return x.osm_lanes_max
             else:
                 return x.osm_lanes_min
@@ -1060,7 +1059,7 @@ def calculate_number_of_lanes_from_reviewed_network(
         join_df[var_name] = join_df.apply(lambda x: _set_lanes(x), axis=1)
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_df[['shstReferenceId', var_name]],
+            join_df[["shstReferenceId", var_name]],
             how="left",
             on="shstReferenceId",
         )
@@ -1074,7 +1073,7 @@ def calculate_number_of_lanes_from_reviewed_network(
         join_df[network_variable] = join_df.apply(lambda x: _set_lanes(x), axis=1)
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_df[['shstReferenceId', network_variable]],
+            join_df[["shstReferenceId", network_variable]],
             how="left",
             on="shstReferenceId",
         )
@@ -1084,6 +1083,7 @@ def calculate_number_of_lanes_from_reviewed_network(
     )
 
     return roadway_net
+
 
 def calculate_assign_group_and_roadway_class(
     roadway_net=None,
@@ -1136,7 +1136,8 @@ def calculate_assign_group_and_roadway_class(
 
     WranglerLogger.info(
         "Calculating Assignment Group and Roadway Class as network variables: '{}' and '{}'".format(
-            assign_group_variable_name, road_class_variable_name,
+            assign_group_variable_name,
+            road_class_variable_name,
         )
     )
 
@@ -1220,9 +1221,7 @@ def calculate_assign_group_and_roadway_class(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    mrcc_shst_data = (
-        mrcc_shst_data if mrcc_shst_data else parameters.mrcc_shst_data
-    )
+    mrcc_shst_data = mrcc_shst_data if mrcc_shst_data else parameters.mrcc_shst_data
     if not mrcc_shst_data:
         msg = "'mrcc_shst_data' not found in method or lasso parameters.".format(
             mrcc_shst_data
@@ -1236,9 +1235,7 @@ def calculate_assign_group_and_roadway_class(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    widot_shst_data = (
-        widot_shst_data if widot_shst_data else parameters.widot_shst_data
-    )
+    widot_shst_data = widot_shst_data if widot_shst_data else parameters.widot_shst_data
     if not widot_shst_data:
         msg = "'widot_shst_data' not found in method or lasso parameters.".format(
             widot_shst_data
@@ -1258,7 +1255,9 @@ def calculate_assign_group_and_roadway_class(
         else parameters.mrcc_roadway_class_variable_shp
     )
     if not mrcc_roadway_class_variable_shp:
-        msg = "'mrcc_roadway_class_variable_shp' not found in method or lasso parameters."
+        msg = (
+            "'mrcc_roadway_class_variable_shp' not found in method or lasso parameters."
+        )
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
@@ -1273,9 +1272,7 @@ def calculate_assign_group_and_roadway_class(
         raise ValueError(msg)
 
     mrcc_assgngrp_dict = (
-        mrcc_assgngrp_dict
-        if mrcc_assgngrp_dict
-        else parameters.mrcc_assgngrp_dict
+        mrcc_assgngrp_dict if mrcc_assgngrp_dict else parameters.mrcc_assgngrp_dict
     )
     if not mrcc_assgngrp_dict:
         msg = "'mrcc_assgngrp_dict' not found in method or lasso parameters."
@@ -1283,9 +1280,7 @@ def calculate_assign_group_and_roadway_class(
         raise ValueError(msg)
 
     widot_assgngrp_dict = (
-        widot_assgngrp_dict
-        if widot_assgngrp_dict
-        else parameters.widot_assgngrp_dict
+        widot_assgngrp_dict if widot_assgngrp_dict else parameters.widot_assgngrp_dict
     )
     if not widot_assgngrp_dict:
         msg = "'widot_assgngrp_dict' not found in method or lasso parameters."
@@ -1293,9 +1288,7 @@ def calculate_assign_group_and_roadway_class(
         raise ValueError(msg)
 
     osm_assgngrp_dict = (
-        osm_assgngrp_dict
-        if osm_assgngrp_dict
-        else parameters.osm_assgngrp_dict
+        osm_assgngrp_dict if osm_assgngrp_dict else parameters.osm_assgngrp_dict
     )
     if not osm_assgngrp_dict:
         msg = "'osm_assgngrp_dict' not found in method or lasso parameters.".format(
@@ -1309,13 +1302,9 @@ def calculate_assign_group_and_roadway_class(
     """
 
     WranglerLogger.debug("Calculating Centroid Connectors")
-    calculate_centroidconnect(
-        roadway_net=roadway_net,
-        parameters=parameters)
+    calculate_centroidconnect(roadway_net=roadway_net, parameters=parameters)
 
-    WranglerLogger.debug(
-        "Reading MRCC Shapefile: {}".format(mrcc_roadway_class_shape)
-    )
+    WranglerLogger.debug("Reading MRCC Shapefile: {}".format(mrcc_roadway_class_shape))
     mrcc_gdf = gpd.read_file(mrcc_roadway_class_shape)
     WranglerLogger.debug("MRCC GDF Columns\n{}".format(mrcc_gdf.columns))
     #'LINK_ID', 'ROUTE_SYS', 'ST_CONCAT', 'geometry'
@@ -1332,9 +1321,7 @@ def calculate_assign_group_and_roadway_class(
     widot_gdf["LINK_ID"] = range(1, 1 + len(widot_gdf))
     WranglerLogger.debug("WiDOT GDF Columns\n{}".format(widot_gdf.columns))
     widot_shst_ref_df = ModelRoadwayNetwork.read_match_result(widot_shst_data)
-    WranglerLogger.debug(
-        "widot shst ref df columns".format(widot_shst_ref_df.columns)
-    )
+    WranglerLogger.debug("widot shst ref df columns".format(widot_shst_ref_df.columns))
     # join MRCC geodataframe with MRCC shared street return to get MRCC route_sys and shared street geometry id
     #
     # get route_sys from MRCC
@@ -1351,7 +1338,7 @@ def calculate_assign_group_and_roadway_class(
     if "mrcc_id" in roadway_net.links_df.columns:
         join_gdf.drop(["source_link_id"], axis=1, inplace=True)
     else:
-        join_gdf.rename(columns={"source_link_id" : "mrcc_id"}, inplace=True)
+        join_gdf.rename(columns={"source_link_id": "mrcc_id"}, inplace=True)
 
     join_gdf = ModelRoadwayNetwork.get_attribute(
         join_gdf,
@@ -1371,8 +1358,8 @@ def calculate_assign_group_and_roadway_class(
         join_gdf,
         osm_asgngrp_crosswalk_df.rename(
             columns={
-            "assign_group": "assignment_group_osm",
-            "roadway_class": "roadway_class_osm"
+                "assign_group": "assignment_group_osm",
+                "roadway_class": "roadway_class_osm",
             }
         ),
         how="left",
@@ -1383,8 +1370,8 @@ def calculate_assign_group_and_roadway_class(
         join_gdf,
         mrcc_asgngrp_crosswalk_df.rename(
             columns={
-            "assign_group": "assignment_group_mrcc",
-            "roadway_class": "roadway_class_mrcc"
+                "assign_group": "assignment_group_mrcc",
+                "roadway_class": "roadway_class_mrcc",
             }
         ),
         how="left",
@@ -1395,8 +1382,8 @@ def calculate_assign_group_and_roadway_class(
         join_gdf,
         widot_asgngrp_crosswak_df.rename(
             columns={
-            "assign_group": "assignment_group_widot",
-            "roadway_class": "roadway_class_widot"
+                "assign_group": "assignment_group_widot",
+                "roadway_class": "roadway_class_widot",
             }
         ),
         how="left",
@@ -1422,7 +1409,9 @@ def calculate_assign_group_and_roadway_class(
         except:
             return 0
 
-    join_gdf[assign_group_variable_name] = join_gdf.apply(lambda x: _set_asgngrp(x), axis=1)
+    join_gdf[assign_group_variable_name] = join_gdf.apply(
+        lambda x: _set_asgngrp(x), axis=1
+    )
 
     def _set_roadway_class(x):
         try:
@@ -1443,24 +1432,24 @@ def calculate_assign_group_and_roadway_class(
         except:
             return 0
 
-    join_gdf[road_class_variable_name] = join_gdf.apply(lambda x: _set_roadway_class(x), axis=1)
+    join_gdf[road_class_variable_name] = join_gdf.apply(
+        lambda x: _set_roadway_class(x), axis=1
+    )
 
     if "mrcc_id" in roadway_net.links_df.columns:
         columns_from_source = ["model_link_id"]
     else:
-        columns_from_source=[
-        "model_link_id",
-        "mrcc_id",
-        mrcc_roadway_class_variable_shp,
-        widot_roadway_class_variable_shp,
+        columns_from_source = [
+            "model_link_id",
+            "mrcc_id",
+            mrcc_roadway_class_variable_shp,
+            widot_roadway_class_variable_shp,
         ]
 
     if update_assign_group:
         join_gdf.rename(
-            columns={
-            assign_group_variable_name: assign_group_variable_name + "_cal"
-            },
-            inplace=True
+            columns={assign_group_variable_name: assign_group_variable_name + "_cal"},
+            inplace=True,
         )
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
@@ -1473,32 +1462,31 @@ def calculate_assign_group_and_roadway_class(
             roadway_net.links_df[assign_group_variable_name],
             roadway_net.links_df[assign_group_variable_name + "_cal"],
         )
-        roadway_net.links_df.drop(assign_group_variable_name + "_cal", axis=1, inplace=True)
+        roadway_net.links_df.drop(
+            assign_group_variable_name + "_cal", axis=1, inplace=True
+        )
     else:
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
             join_gdf[columns_from_source + [assign_group_variable_name]],
-            how = "left",
-            on = "model_link_id",
+            how="left",
+            on="model_link_id",
         )
 
     if "mrcc_id" in roadway_net.links_df.columns:
         columns_from_source = ["model_link_id"]
     else:
         columns_from_source = [
-        "model_link_id",
-        "mrcc_id",
-        mrcc_roadway_class_variable_shp,
-        widot_roadway_class_variable_shp,
+            "model_link_id",
+            "mrcc_id",
+            mrcc_roadway_class_variable_shp,
+            widot_roadway_class_variable_shp,
         ]
-
 
     if update_roadway_class:
         join_gdf.rename(
-            columns={
-            road_class_variable_name: road_class_variable_name + "_cal"
-            },
-            inplace=True
+            columns={road_class_variable_name: road_class_variable_name + "_cal"},
+            inplace=True,
         )
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
@@ -1511,7 +1499,9 @@ def calculate_assign_group_and_roadway_class(
             roadway_net.links_df[road_class_variable_name],
             roadway_net.links_df[road_class_variable_name + "_cal"],
         )
-        roadway_net.links_df.drop(road_class_variable_name + "_cal", axis=1, inplace=True)
+        roadway_net.links_df.drop(
+            road_class_variable_name + "_cal", axis=1, inplace=True
+        )
     else:
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
@@ -1522,11 +1512,13 @@ def calculate_assign_group_and_roadway_class(
 
     WranglerLogger.info(
         "Finished calculating assignment group variable {} and roadway class variable {}".format(
-            assign_group_variable_name, road_class_variable_name,
+            assign_group_variable_name,
+            road_class_variable_name,
         )
     )
 
     return roadway_net
+
 
 def calculate_assign_group_and_roadway_class_from_reviewed_network(
     roadway_net=None,
@@ -1565,7 +1557,8 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
 
     WranglerLogger.info(
         "Calculating Assignment Group and Roadway Class as network variables: '{}' and '{}'".format(
-            assign_group_variable_name, road_class_variable_name,
+            assign_group_variable_name,
+            road_class_variable_name,
         )
     )
 
@@ -1614,9 +1607,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         raise ValueError(msg)
 
     metc_assgngrp_file = (
-        metc_assgngrp_file
-        if metc_assgngrp_file
-        else parameters.metc_assgngrp_file
+        metc_assgngrp_file if metc_assgngrp_file else parameters.metc_assgngrp_file
     )
     if not metc_assgngrp_file:
         msg = "'metc_assgngrp_file' not found in method or lasso parameters.".format(
@@ -1626,9 +1617,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         raise ValueError(msg)
 
     metc_rdclass_file = (
-        metc_rdclass_file
-        if metc_rdclass_file
-        else parameters.metc_rdclass_file
+        metc_rdclass_file if metc_rdclass_file else parameters.metc_rdclass_file
     )
     if not metc_rdclass_file:
         msg = "'metc_rdclass_file' not found in method or lasso parameters.".format(
@@ -1638,9 +1627,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         raise ValueError(msg)
 
     osm_assgngrp_dict = (
-        osm_assgngrp_dict
-        if osm_assgngrp_dict
-        else parameters.osm_assgngrp_dict
+        osm_assgngrp_dict if osm_assgngrp_dict else parameters.osm_assgngrp_dict
     )
     if not osm_assgngrp_dict:
         msg = "'osm_assgngrp_dict' not found in method or lasso parameters.".format(
@@ -1654,9 +1641,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
     """
 
     WranglerLogger.debug("Calculating Centroid Connectors")
-    calculate_centroidconnect(
-        roadway_net=roadway_net,
-        parameters=parameters)
+    calculate_centroidconnect(roadway_net=roadway_net, parameters=parameters)
 
     metc_assgngrp_df = pd.read_csv(metc_assgngrp_file)
     metc_rdclass_df = pd.read_csv(metc_rdclass_file)
@@ -1667,8 +1652,8 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         roadway_net.links_df,
         osm_asgngrp_crosswalk_df.rename(
             columns={
-            "assign_group": "assignment_group_osm",
-            "roadway_class": "roadway_class_osm"
+                "assign_group": "assignment_group_osm",
+                "roadway_class": "roadway_class_osm",
             }
         ),
         how="left",
@@ -1679,14 +1664,14 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         join_gdf,
         metc_assgngrp_df,
         how="left",
-        on='shstReferenceId',
+        on="shstReferenceId",
     )
 
     join_gdf = pd.merge(
         join_gdf,
         metc_rdclass_df,
         how="left",
-        on='shstReferenceId',
+        on="shstReferenceId",
     )
 
     def _set_asgngrp(x):
@@ -1697,12 +1682,12 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         elif x.rail_only == 1:
             return 100
         elif x.drive_access == 0:
-            if x.roadway == 'cycleway':
+            if x.roadway == "cycleway":
                 return 101
-            elif x.roadway == 'footway':
+            elif x.roadway == "footway":
                 return 102
             else:
-                return 103 # cul-de-secs, edge roads, and others
+                return 103  # cul-de-secs, edge roads, and others
         elif x.assgngrp_min > 0:
             if x.assgngrp_min == x.assgngrp_max:
                 return x.assgngrp_min
@@ -1710,7 +1695,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
                 return x.assgngrp_min
             elif x.assignment_group_osm == x.assgngrp_max:
                 return x.assgngrp_max
-            elif x.roadway in ['motorway', 'trunk', 'primary', 'secondary']:
+            elif x.roadway in ["motorway", "trunk", "primary", "secondary"]:
                 return x.assgngrp_min
             else:
                 return x.assgngrp_max
@@ -1719,7 +1704,9 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         else:
             return 101
 
-    join_gdf[assign_group_variable_name] = join_gdf.apply(lambda x: _set_asgngrp(x), axis=1)
+    join_gdf[assign_group_variable_name] = join_gdf.apply(
+        lambda x: _set_asgngrp(x), axis=1
+    )
 
     def _set_roadway_class(x):
         if x.centroidconnect == 1:
@@ -1737,7 +1724,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
                 return x.rdclass_min
             elif x.roadway_class_osm == x.rdclass_max:
                 return x.rdclass_max
-            elif x.roadway in ['motorway', 'trunk', 'primary', 'secondary']:
+            elif x.roadway in ["motorway", "trunk", "primary", "secondary"]:
                 return x.rdclass_min
             else:
                 return x.rdclass_max
@@ -1746,18 +1733,18 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         else:
             return 101
 
-    join_gdf[road_class_variable_name] = join_gdf.apply(lambda x: _set_roadway_class(x), axis=1)
+    join_gdf[road_class_variable_name] = join_gdf.apply(
+        lambda x: _set_roadway_class(x), axis=1
+    )
 
     if update_assign_group:
         join_gdf.rename(
-            columns={
-            assign_group_variable_name: assign_group_variable_name + "_cal"
-            },
-            inplace=True
+            columns={assign_group_variable_name: assign_group_variable_name + "_cal"},
+            inplace=True,
         )
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_gdf[['shstReferenceId'] + [assign_group_variable_name + "_cal"]],
+            join_gdf[["shstReferenceId"] + [assign_group_variable_name + "_cal"]],
             how="left",
             on="shstReferenceId",
         )
@@ -1766,25 +1753,25 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
             roadway_net.links_df[assign_group_variable_name],
             roadway_net.links_df[assign_group_variable_name + "_cal"],
         )
-        roadway_net.links_df.drop(assign_group_variable_name + "_cal", axis=1, inplace=True)
+        roadway_net.links_df.drop(
+            assign_group_variable_name + "_cal", axis=1, inplace=True
+        )
     else:
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_gdf[['shstReferenceId'] + [assign_group_variable_name]],
-            how = "left",
-            on = "shstReferenceId",
+            join_gdf[["shstReferenceId"] + [assign_group_variable_name]],
+            how="left",
+            on="shstReferenceId",
         )
 
     if update_roadway_class:
         join_gdf.rename(
-            columns={
-            road_class_variable_name: road_class_variable_name + "_cal"
-            },
-            inplace=True
+            columns={road_class_variable_name: road_class_variable_name + "_cal"},
+            inplace=True,
         )
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_gdf[['shstReferenceId'] + [road_class_variable_name + "_cal"]],
+            join_gdf[["shstReferenceId"] + [road_class_variable_name + "_cal"]],
             how="left",
             on="shstReferenceId",
         )
@@ -1793,22 +1780,26 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
             roadway_net.links_df[road_class_variable_name],
             roadway_net.links_df[road_class_variable_name + "_cal"],
         )
-        roadway_net.links_df.drop(road_class_variable_name + "_cal", axis=1, inplace=True)
+        roadway_net.links_df.drop(
+            road_class_variable_name + "_cal", axis=1, inplace=True
+        )
     else:
         roadway_net.links_df = pd.merge(
             roadway_net.links_df,
-            join_gdf[['shstReferenceId'] + [road_class_variable_name]],
+            join_gdf[["shstReferenceId"] + [road_class_variable_name]],
             how="left",
             on="shstReferenceId",
         )
 
     WranglerLogger.info(
         "Finished calculating assignment group variable {} and roadway class variable {}".format(
-            assign_group_variable_name, road_class_variable_name,
+            assign_group_variable_name,
+            road_class_variable_name,
         )
     )
 
     return roadway_net
+
 
 def calculate_centroidconnect(
     roadway_net,
@@ -1872,9 +1863,7 @@ def calculate_centroidconnect(
         raise ValueError(msg)
 
     highest_taz_number = (
-        highest_taz_number
-        if highest_taz_number
-        else parameters.highest_taz_number
+        highest_taz_number if highest_taz_number else parameters.highest_taz_number
     )
 
     if not highest_taz_number:
@@ -1909,20 +1898,19 @@ def calculate_centroidconnect(
     ] = True
 
     if as_integer:
-        roadway_net.links_df[network_variable] = roadway_net.links_df[network_variable].astype(
-            int
-        )
-    WranglerLogger.info(
-        "Finished calculating centroid connector variable: {}".format(
+        roadway_net.links_df[network_variable] = roadway_net.links_df[
             network_variable
-        )
+        ].astype(int)
+    WranglerLogger.info(
+        "Finished calculating centroid connector variable: {}".format(network_variable)
     )
 
     return roadway_net
 
+
 def add_centroid_and_centroid_connector(
-    roadway_network = None,
-    parameters = None,
+    roadway_network=None,
+    parameters=None,
     centroid_file: str = None,
     centroid_connector_link_file: str = None,
     centroid_connector_shape_file: str = None,
@@ -1959,15 +1947,13 @@ def add_centroid_and_centroid_connector(
         raise ValueError(msg)
 
     if not roadway_network:
-        msg = "'roadway_network' is missing from the method call.".format(roadway_network)
+        msg = "'roadway_network' is missing from the method call.".format(
+            roadway_network
+        )
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    centroid_file = (
-        centroid_file
-        if centroid_file
-        else parameters.centroid_file
-    )
+    centroid_file = centroid_file if centroid_file else parameters.centroid_file
 
     centroid_connector_link_file = (
         centroid_connector_link_file
@@ -2005,67 +1991,70 @@ def add_centroid_and_centroid_connector(
     centroid_connector_link_gdf["centroidconnect"] = 1
     centroid_connector_link_gdf["managed"] = 0
 
-    if 'county' in centroid_connector_link_gdf.columns:
-        centroid_connector_link_gdf['county'] = (
-            centroid_connector_link_gdf['county']
+    if "county" in centroid_connector_link_gdf.columns:
+        centroid_connector_link_gdf["county"] = (
+            centroid_connector_link_gdf["county"]
             .map(parameters.county_code_dict)
             .fillna(10)
             .astype(int)
         )
 
-    centroid_gdf['drive_access'] = 1
-    centroid_gdf['walk_access'] = 1
-    centroid_gdf['bike_access'] = 1
+    centroid_gdf["drive_access"] = 1
+    centroid_gdf["walk_access"] = 1
+    centroid_gdf["bike_access"] = 1
 
-    centroid_gdf["X"] = centroid_gdf.geometry.apply(
-        lambda g: g.x
-    )
-    centroid_gdf["Y"] = centroid_gdf.geometry.apply(
-        lambda g: g.y
-    )
+    centroid_gdf["X"] = centroid_gdf.geometry.apply(lambda g: g.x)
+    centroid_gdf["Y"] = centroid_gdf.geometry.apply(lambda g: g.y)
 
     roadway_network.nodes_df = pd.concat(
-        [roadway_network.nodes_df,
-        centroid_gdf[
-            list(set(roadway_network.nodes_df.columns) &
-            set(centroid_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.nodes_df,
+            centroid_gdf[
+                list(set(roadway_network.nodes_df.columns) & set(centroid_gdf.columns))
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
-    centroid_connector_link_gdf = assign_link_id(roadway_network, centroid_connector_link_gdf)
+    centroid_connector_link_gdf = assign_link_id(
+        roadway_network, centroid_connector_link_gdf
+    )
 
     roadway_network.links_df = pd.concat(
-        [roadway_network.links_df,
-        centroid_connector_link_gdf[
-            list(set(roadway_network.links_df.columns) &
-            set(centroid_connector_link_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.links_df,
+            centroid_connector_link_gdf[
+                list(
+                    set(roadway_network.links_df.columns)
+                    & set(centroid_connector_link_gdf.columns)
+                )
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
     roadway_network.shapes_df = pd.concat(
-        [roadway_network.shapes_df,
-        centroid_connector_shape_gdf[
-            list(set(roadway_network.shapes_df.columns) &
-            set(centroid_connector_shape_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.shapes_df,
+            centroid_connector_shape_gdf[
+                list(
+                    set(roadway_network.shapes_df.columns)
+                    & set(centroid_connector_shape_gdf.columns)
+                )
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
-    WranglerLogger.info(
-        "Finished adding centroid and centroid connectors"
-    )
+    WranglerLogger.info("Finished adding centroid and centroid connectors")
 
     return roadway_network
 
-def assign_link_id(
-    roadway_network = None,
-    add_links_df = None
-):
+
+def assign_link_id(roadway_network=None, add_links_df=None):
     """
     when adding new links, assign id
 
@@ -2081,18 +2070,16 @@ def assign_link_id(
     existing_max_id = roadway_network.links_df["model_link_id"].max()
 
     if "model_link_id" in add_links_df.columns:
-        add_links_df.drop(["model_link_id"], axis = 1, inplace = True)
+        add_links_df.drop(["model_link_id"], axis=1, inplace=True)
 
-    add_links_df["model_link_id"] = range(1, 1+len(add_links_df))
+    add_links_df["model_link_id"] = range(1, 1 + len(add_links_df))
 
     add_links_df["model_link_id"] = add_links_df["model_link_id"] + existing_max_id
 
     return add_links_df
 
-def assign_node_id(
-    roadway_network = None,
-    add_nodes_df = None
-):
+
+def assign_node_id(roadway_network=None, add_nodes_df=None):
     """
     when adding new links, assign id
 
@@ -2108,17 +2095,18 @@ def assign_node_id(
     existing_max_id = roadway_network.nodes_df["model_node_id"].max()
 
     if "model_node_id" in add_nodes_df.columns:
-        add_nodes_df.drop(["model_node_id"], axis = 1, inplace = True)
+        add_nodes_df.drop(["model_node_id"], axis=1, inplace=True)
 
-    add_nodes_df["model_node_id"] = range(1, 1+len(add_nodes_df))
+    add_nodes_df["model_node_id"] = range(1, 1 + len(add_nodes_df))
 
     add_nodes_df["model_node_id"] = add_nodes_df["model_node_id"] + existing_max_id
 
     return add_nodes_df
 
+
 def add_rail_links_and_nodes(
-    roadway_network = None,
-    parameters = None,
+    roadway_network=None,
+    parameters=None,
     rail_links_file: str = None,
     rail_nodes_file: str = None,
     add_rail_ae_connections: bool = False,
@@ -2151,21 +2139,15 @@ def add_rail_links_and_nodes(
         raise ValueError(msg)
 
     if not roadway_network:
-        msg = "'roadway_network' is missing from the method call.".format(roadway_network)
+        msg = "'roadway_network' is missing from the method call.".format(
+            roadway_network
+        )
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    rail_links_file = (
-        rail_links_file
-        if rail_links_file
-        else parameters.rail_links_file
-    )
+    rail_links_file = rail_links_file if rail_links_file else parameters.rail_links_file
 
-    rail_nodes_file = (
-        rail_nodes_file
-        if rail_nodes_file
-        else parameters.rail_nodes_file
-    )
+    rail_nodes_file = rail_nodes_file if rail_nodes_file else parameters.rail_nodes_file
 
     if not rail_links_file:
         msg = "'rail_links_file' not found in method or lasso parameters."
@@ -2189,73 +2171,80 @@ def add_rail_links_and_nodes(
     rail_links_gdf["centroidconnect"] = 0
     rail_links_gdf["managed"] = 0
 
-    rail_nodes_gdf["X"] = rail_nodes_gdf.geometry.apply(
-        lambda g: g.x
-    )
-    rail_nodes_gdf["Y"] = rail_nodes_gdf.geometry.apply(
-        lambda g: g.y
-    )
+    rail_nodes_gdf["X"] = rail_nodes_gdf.geometry.apply(lambda g: g.x)
+    rail_nodes_gdf["Y"] = rail_nodes_gdf.geometry.apply(lambda g: g.y)
 
-    if 'model_link_id' not in rail_links_gdf.columns:
+    if "model_link_id" not in rail_links_gdf.columns:
         rail_links_gdf = assign_link_id(roadway_network, rail_links_gdf)
-    if 'model_node_id' not in rail_nodes_gdf.columns:
+    if "model_node_id" not in rail_nodes_gdf.columns:
         rail_nodes_gdf = assign_node_id(roadway_network, rail_nodes_gdf)
-    if 'A' not in rail_links_gdf.columns:
-        node_id_crosswalk = dict(zip(rail_nodes_gdf['shst_node_id'], rail_nodes_gdf['model_node_id']))
-        rail_links_gdf['A'] = rail_links_gdf['fromIntersectionId'].map(node_id_crosswalk)
-        rail_links_gdf['B'] = rail_links_gdf['toIntersectionId'].map(node_id_crosswalk)
+    if "A" not in rail_links_gdf.columns:
+        node_id_crosswalk = dict(
+            zip(rail_nodes_gdf["shst_node_id"], rail_nodes_gdf["model_node_id"])
+        )
+        rail_links_gdf["A"] = rail_links_gdf["fromIntersectionId"].map(
+            node_id_crosswalk
+        )
+        rail_links_gdf["B"] = rail_links_gdf["toIntersectionId"].map(node_id_crosswalk)
 
     # create shape id for rail links
-    if 'shstReferenceId' not in rail_links_gdf.columns:
-        rail_links_gdf['shstReferenceId'] = rail_links_gdf['fromIntersectionId'] + '_' + rail_links_gdf['toIntersectionId']
-        rail_links_gdf['shstGeometryId'] = rail_links_gdf['shstReferenceId']
-        rail_links_gdf['id'] = rail_links_gdf['shstReferenceId']
-    
+    if "shstReferenceId" not in rail_links_gdf.columns:
+        rail_links_gdf["shstReferenceId"] = (
+            rail_links_gdf["fromIntersectionId"]
+            + "_"
+            + rail_links_gdf["toIntersectionId"]
+        )
+        rail_links_gdf["shstGeometryId"] = rail_links_gdf["shstReferenceId"]
+        rail_links_gdf["id"] = rail_links_gdf["shstReferenceId"]
+
     roadway_network.nodes_df = pd.concat(
-        [roadway_network.nodes_df,
-        rail_nodes_gdf[
-            list(set(roadway_network.nodes_df.columns) &
-            set(rail_nodes_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.nodes_df,
+            rail_nodes_gdf[
+                list(
+                    set(roadway_network.nodes_df.columns) & set(rail_nodes_gdf.columns)
+                )
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
     roadway_network.links_df = pd.concat(
-        [roadway_network.links_df,
-        rail_links_gdf[
-            list(set(roadway_network.links_df.columns) &
-            set(rail_links_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.links_df,
+            rail_links_gdf[
+                list(
+                    set(roadway_network.links_df.columns) & set(rail_links_gdf.columns)
+                )
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
     roadway_network.shapes_df = pd.concat(
-        [roadway_network.shapes_df,
-        rail_links_gdf[
-            list(set(roadway_network.shapes_df.columns) &
-            set(rail_links_gdf.columns))
-        ]],
-        sort = False,
-        ignore_index = True
+        [
+            roadway_network.shapes_df,
+            rail_links_gdf[
+                list(
+                    set(roadway_network.shapes_df.columns) & set(rail_links_gdf.columns)
+                )
+            ],
+        ],
+        sort=False,
+        ignore_index=True,
     )
 
-    WranglerLogger.info(
-        "Finished adding rail links and nodes connectors"
-    )
+    WranglerLogger.info("Finished adding rail links and nodes connectors")
 
     if add_rail_ae_connections:
-        roadway_network = add_rail_ae_connections(
-            roadway_network
-        )
+        roadway_network = add_rail_ae_connections(roadway_network)
 
     return roadway_network
 
-def add_rail_ae_connections(
-    roadway_network, 
-    parameters
-):
+
+def add_rail_ae_connections(roadway_network, parameters):
     """
     add walk access and egress connectors to rail stations
     """
@@ -2273,115 +2262,124 @@ def add_rail_ae_connections(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    WranglerLogger.info('Creating rail access and egress connection links')
+    WranglerLogger.info("Creating rail access and egress connection links")
     # add links between rail stops and the closest drive node
-    if roadway_network.nodes_df.crs == CRS('epsg:4326'):
-        roadway_network.nodes_df.crs = CRS('epsg:4269')
+    if roadway_network.nodes_df.crs == CRS("epsg:4326"):
+        roadway_network.nodes_df.crs = CRS("epsg:4269")
 
-    rail_nodes_df = roadway_network.nodes_df[roadway_network.nodes_df.rail_only == 1].copy()
-
-    drive_nodes_df = roadway_network.nodes_df[
-        (roadway_network.nodes_df.drive_access == 1) & 
-        (roadway_network.nodes_df.model_node_id > parameters.zones)
+    rail_nodes_df = roadway_network.nodes_df[
+        roadway_network.nodes_df.rail_only == 1
     ].copy()
 
-    drive_nodes_df = drive_nodes_df.to_crs(CRS('epsg:26915'))
-    drive_nodes_df['X'] = drive_nodes_df.geometry.map(lambda g:g.x)
-    drive_nodes_df['Y'] = drive_nodes_df.geometry.map(lambda g:g.y)
-    inventory_node_ref = drive_nodes_df[['X', 'Y']].values
+    drive_nodes_df = roadway_network.nodes_df[
+        (roadway_network.nodes_df.drive_access == 1)
+        & (roadway_network.nodes_df.model_node_id > parameters.zones)
+    ].copy()
+
+    drive_nodes_df = drive_nodes_df.to_crs(CRS("epsg:26915"))
+    drive_nodes_df["X"] = drive_nodes_df.geometry.map(lambda g: g.x)
+    drive_nodes_df["Y"] = drive_nodes_df.geometry.map(lambda g: g.y)
+    inventory_node_ref = drive_nodes_df[["X", "Y"]].values
     tree = cKDTree(inventory_node_ref)
 
-    rail_nodes_df = rail_nodes_df.to_crs(CRS('epsg:26915'))
-    rail_nodes_df['X'] = rail_nodes_df['geometry'].apply(lambda p: p.x)
-    rail_nodes_df['Y'] = rail_nodes_df['geometry'].apply(lambda p: p.y)
+    rail_nodes_df = rail_nodes_df.to_crs(CRS("epsg:26915"))
+    rail_nodes_df["X"] = rail_nodes_df["geometry"].apply(lambda p: p.x)
+    rail_nodes_df["Y"] = rail_nodes_df["geometry"].apply(lambda p: p.y)
 
     for i in range(len(rail_nodes_df)):
-        point = rail_nodes_df.iloc[i][['X', 'Y']].values
-        dd, ii = tree.query(point, k = 1)
-        add_snap_gdf = gpd.GeoDataFrame(drive_nodes_df.iloc[ii]).transpose().reset_index(drop = True)
-        add_snap_gdf['A'] = rail_nodes_df.iloc[i]['model_node_id']
+        point = rail_nodes_df.iloc[i][["X", "Y"]].values
+        dd, ii = tree.query(point, k=1)
+        add_snap_gdf = (
+            gpd.GeoDataFrame(drive_nodes_df.iloc[ii]).transpose().reset_index(drop=True)
+        )
+        add_snap_gdf["A"] = rail_nodes_df.iloc[i]["model_node_id"]
         if i == 0:
             new_link_gdf = add_snap_gdf.copy()
         else:
-            new_link_gdf = pd.concat([new_link_gdf, add_snap_gdf], ignore_index=True, sort=False)
+            new_link_gdf = pd.concat(
+                [new_link_gdf, add_snap_gdf], ignore_index=True, sort=False
+            )
 
     if len(rail_nodes_df) > 0:
-        new_link_gdf = new_link_gdf[['A', 'model_node_id']].copy()
-        new_link_gdf.rename(columns = {'model_node_id' : 'B'}, inplace = True)
+        new_link_gdf = new_link_gdf[["A", "model_node_id"]].copy()
+        new_link_gdf.rename(columns={"model_node_id": "B"}, inplace=True)
 
         # add the opposite direction
         new_link_gdf = pd.concat(
-            [
-                new_link_gdf,
-                new_link_gdf.rename(columns = {'A' : 'B', 'B' : 'A'})
-            ],
-            sort = False, 
-            ignore_index = True
+            [new_link_gdf, new_link_gdf.rename(columns={"A": "B", "B": "A"})],
+            sort=False,
+            ignore_index=True,
         )
 
         # create shapes
         new_link_gdf = pd.merge(
             new_link_gdf,
             roadway_network.nodes_df[["model_node_id", "X", "Y"]].rename(
-                columns = {"model_node_id" : "A", "X": "A_X", "Y" : "A_Y"}
+                columns={"model_node_id": "A", "X": "A_X", "Y": "A_Y"}
             ),
-            how = "left",
-            on = "A"
+            how="left",
+            on="A",
         )
 
         new_link_gdf = pd.merge(
             new_link_gdf,
             roadway_network.nodes_df[["model_node_id", "X", "Y"]].rename(
-                columns = {"model_node_id" : "B", "X": "B_X", "Y" : "B_Y"}
+                columns={"model_node_id": "B", "X": "B_X", "Y": "B_Y"}
             ),
-            how = "left",
-            on = "B"
+            how="left",
+            on="B",
         )
 
         new_link_gdf["geometry"] = new_link_gdf.apply(
-            lambda g: LineString([Point(g.A_X, g.A_Y), Point(g.B_X, g.B_Y)]),
-            axis = 1
+            lambda g: LineString([Point(g.A_X, g.A_Y), Point(g.B_X, g.B_Y)]), axis=1
         )
 
         new_link_gdf = gpd.GeoDataFrame(
             new_link_gdf,
-            geometry = new_link_gdf['geometry'],
-            crs = roadway_network.links_df.crs
+            geometry=new_link_gdf["geometry"],
+            crs=roadway_network.links_df.crs,
         )
 
         new_link_gdf[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_link_gdf.apply(
-            lambda x: create_unique_shape_id(x["geometry"]),
-            axis = 1
+            lambda x: create_unique_shape_id(x["geometry"]), axis=1
         )
 
-        new_link_gdf['drive_access'] = 1
-        new_link_gdf['walk_access'] = 1
-        new_link_gdf['bike_access'] = 1
-        new_link_gdf['assign_group'] = 50
-        new_link_gdf['roadway_class'] = 50
+        new_link_gdf["drive_access"] = 1
+        new_link_gdf["walk_access"] = 1
+        new_link_gdf["bike_access"] = 1
+        new_link_gdf["assign_group"] = 50
+        new_link_gdf["roadway_class"] = 50
 
-        new_link_gdf.drop_duplicates(subset = ['A', 'B'], inplace = True)
-        
+        new_link_gdf.drop_duplicates(subset=["A", "B"], inplace=True)
+
         new_link_gdf = assign_link_id(roadway_network, new_link_gdf)
-        
+
         roadway_network.links_df = pd.concat(
-            [roadway_network.links_df, 
-            new_link_gdf[
-                list(set(roadway_network.links_df.columns) &
-                set(new_link_gdf.columns))
-            ]], 
-            sort = False, 
-            ignore_index = True
+            [
+                roadway_network.links_df,
+                new_link_gdf[
+                    list(
+                        set(roadway_network.links_df.columns)
+                        & set(new_link_gdf.columns)
+                    )
+                ],
+            ],
+            sort=False,
+            ignore_index=True,
         )
 
         roadway_network.shapes_df = pd.concat(
-            [roadway_network.shapes_df, 
-            new_link_gdf[
-                list(set(roadway_network.shapes_df.columns) &
-                set(new_link_gdf.columns))
-            ]], 
-            sort = False, 
-            ignore_index = True
+            [
+                roadway_network.shapes_df,
+                new_link_gdf[
+                    list(
+                        set(roadway_network.shapes_df.columns)
+                        & set(new_link_gdf.columns)
+                    )
+                ],
+            ],
+            sort=False,
+            ignore_index=True,
         )
 
         return roadway_network

@@ -8,6 +8,7 @@
     cube_transit_net = StandardTransit.read_gtfs(BASE_TRANSIT_DIR)
     cube_transit_net.write_as_cube_lin(os.path.join(WRITE_DIR, "outfile.lin"))
 """
+
 import os
 import copy
 import csv
@@ -28,7 +29,7 @@ from .metcouncil_parameters import MetCouncil_Parameters
 
 
 class CubeTransit(object):
-    """ Class for storing information about transit defined in Cube line
+    """Class for storing information about transit defined in Cube line
     files.
 
     Has the capability to:
@@ -66,8 +67,8 @@ class CubeTransit(object):
     """
 
     def __init__(
-        self, 
-        parameters: Union[MetCouncil_Parameters, dict] = {}, 
+        self,
+        parameters: Union[MetCouncil_Parameters, dict] = {},
         transit_shape_crosswalk_dict: Optional[dict] = None,
     ):
         """
@@ -136,41 +137,41 @@ class CubeTransit(object):
                 self.add_cube(lin_file)
             return
         else:
-            msg= "{} not a valid transit line string, directory, or file"
+            msg = "{} not a valid transit line string, directory, or file"
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
         WranglerLogger.debug("finished parsing cube line file")
-        #WranglerLogger.debug("--Parse Tree--\n {}".format(parse_tree.pretty()))
+        # WranglerLogger.debug("--Parse Tree--\n {}".format(parse_tree.pretty()))
         transformed_tree_data = CubeTransformer().transform(parse_tree)
-        #WranglerLogger.debug("--Transformed Parse Tree--\n {}".format(transformed_tree_data))
+        # WranglerLogger.debug("--Transformed Parse Tree--\n {}".format(transformed_tree_data))
 
-        _line_data = transformed_tree_data['lines']
+        _line_data = transformed_tree_data["lines"]
 
         line_properties_dict = {}
         line_shapes_dict = {}
-        # ungroup the existing line name into multiple signle lines based on HEADWAY, 
+        # ungroup the existing line name into multiple signle lines based on HEADWAY,
         # each single line represent a time period
         # create a short line name {route_id}_{direction}_{shp_index} without time periods,
-        # because existing line name may not refelct the correct time periods, 
+        # because existing line name may not refelct the correct time periods,
         # e.g. remove a time period without updatting the line name
         # build correspondence between signle lines and short line name
         # used to identify if an entire line or a time period get deleted, added or updated
         single_lines = {}
         for k, v in _line_data.items():
-            route_id, direction_id, shp_index = CubeTransit.get_route_dir_shpindex_from_route_name(
-                k
-            )
-            time_period_numbers = CubeTransit.get_time_period_numbers_from_cube_properties(
-                v["line_properties"]
+            (
+                route_id,
+                direction_id,
+                shp_index,
+            ) = CubeTransit.get_route_dir_shpindex_from_route_name(k)
+            time_period_numbers = (
+                CubeTransit.get_time_period_numbers_from_cube_properties(
+                    v["line_properties"]
+                )
             )
             short_line_name = (
-                    str(route_id)
-                    + "_"
-                    + str(direction_id)
-                    + "_"
-                    + str(shp_index)
-                )
+                str(route_id) + "_" + str(direction_id) + "_" + str(shp_index)
+            )
             line_properties_dict.update({short_line_name: v["line_properties"]})
             line_shapes_dict.update({short_line_name: v["line_shape"]})
             time_period_names = []
@@ -188,7 +189,7 @@ class CubeTransit(object):
                 )
                 single_lines.update({single_line_name: short_line_name})
                 time_period_names.append(time_period_name)
-            
+
             # used in the warning message, checking if time periods in NAME matches HEADWAY[x]
             rebuild_line_name = (
                 str(route_id)
@@ -222,7 +223,7 @@ class CubeTransit(object):
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
-        self.program_type = transformed_tree_data.get("program_type",None)
+        self.program_type = transformed_tree_data.get("program_type", None)
 
         self.lines += new_lines
         self.signle_lines.update(single_lines)
@@ -233,7 +234,7 @@ class CubeTransit(object):
 
     @staticmethod
     def create_from_cube(
-        transit_source: str, 
+        transit_source: str,
         parameters: Optional[dict] = {},
         transit_shape_crosswalk_file: Optional[str] = None,
         model_shape_id_column: Optional[str] = "model_shape_id",
@@ -260,14 +261,20 @@ class CubeTransit(object):
                     model_shape_id_column
                 )
             )
-            
-            assert "shape_id" in transit_shape_crosswalk_df.columns, "shape_id not found in transit shape crosswalk file"
-            assert model_shape_id_column in transit_shape_crosswalk_df.columns, "model shape id {} not found in transit shape crosswalk file".format(model_shape_id_column)
-            
+
+            assert (
+                "shape_id" in transit_shape_crosswalk_df.columns
+            ), "shape_id not found in transit shape crosswalk file"
+            assert (
+                model_shape_id_column in transit_shape_crosswalk_df.columns
+            ), "model shape id {} not found in transit shape crosswalk file".format(
+                model_shape_id_column
+            )
+
             transit_shape_crosswalk_dict = dict(
                 zip(
                     transit_shape_crosswalk_df[model_shape_id_column].astype(str),
-                    transit_shape_crosswalk_df["shape_id"].astype(str)
+                    transit_shape_crosswalk_df["shape_id"].astype(str),
                 )
             )
         else:
@@ -302,16 +309,26 @@ class CubeTransit(object):
         build_lines = list(self.signle_lines.keys())
 
         # check each signle line instead of orginal grouped line NAME
-        # get the corresponding short line name 
+        # get the corresponding short line name
         # since {route_id}, {direction}, {shp_index} are stable for each line
-        lines_to_update = sorted(list(
-            set([self.signle_lines[l] for l in build_lines if l in base_lines]))
+        lines_to_update = sorted(
+            list(set([self.signle_lines[l] for l in build_lines if l in base_lines]))
         )
-        lines_to_delete = sorted(list(
-            set([base_transit.signle_lines[l] for l in base_lines if l not in build_lines]))
+        lines_to_delete = sorted(
+            list(
+                set(
+                    [
+                        base_transit.signle_lines[l]
+                        for l in base_lines
+                        if l not in build_lines
+                    ]
+                )
+            )
         )
-        lines_to_add = sorted(list(
-            set([self.signle_lines[l] for l in build_lines if l not in base_lines]))
+        lines_to_add = sorted(
+            list(
+                set([self.signle_lines[l] for l in build_lines if l not in base_lines])
+            )
         )
 
         project_card_changes = []
@@ -331,10 +348,15 @@ class CubeTransit(object):
 
         for line in lines_to_update:
             # line is the short line name
-            route_id, direction_id, shp_index = CubeTransit.get_route_dir_shpindex_from_route_name(line)
+            (
+                route_id,
+                direction_id,
+                shp_index,
+            ) = CubeTransit.get_route_dir_shpindex_from_route_name(line)
             WranglerLogger.debug(
                 "Finding differences in time periods for: line (route {}, direction {}, shape index {})".format(
-                    route_id, direction_id, shp_index)
+                    route_id, direction_id, shp_index
+                )
             )
 
             """
@@ -358,26 +380,26 @@ class CubeTransit(object):
 
             if updated_shapes:
                 for updates in updated_shapes:
-                    if (len(updates.get("existing"))==0) or (len(updates.get("set"))==0):
+                    if (len(updates.get("existing")) == 0) or (
+                        len(updates.get("set")) == 0
+                    ):
                         WranglerLogger.info(
                             "Review transit routing project, manual correction needed for "
                             "line (route {}, direction {}, shape index {})!".format(
-                            route_id, direction_id, shp_index)
+                                route_id, direction_id, shp_index
+                            )
                         )
                 update_shape_card_dict = self.create_update_route_card_dict(
                     line, updated_shapes
                 )
                 project_card_changes.append(update_shape_card_dict)
-        
+
         """
         Evaluate Additions
 
         """
-        added_routes=[]
-        add_card_dict = {
-            "category": "Add New Route",
-            "routes": []
-            }
+        added_routes = []
+        add_card_dict = {"category": "Add New Route", "routes": []}
 
         for line in lines_to_add:
 
@@ -385,22 +407,31 @@ class CubeTransit(object):
 
             # check these attributs to see if a route is an existing added route
             # if yes, then nest the trips to existing route
-            route_match_attributes = ["route_id", "route_short_name", "route_long_name", 
-                                "route_type", "agency_raw_name", "agency_id"]
+            route_match_attributes = [
+                "route_id",
+                "route_short_name",
+                "route_long_name",
+                "route_type",
+                "agency_raw_name",
+                "agency_id",
+            ]
 
             if route_properties in added_routes:
-                for route in add_card_dict['routes']:
-                    if all(route[attr] == route_properties[attr] for attr in route_match_attributes):
-                        route['trips'].append(trip_properties)
+                for route in add_card_dict["routes"]:
+                    if all(
+                        route[attr] == route_properties[attr]
+                        for attr in route_match_attributes
+                    ):
+                        route["trips"].append(trip_properties)
 
             else:
                 added_routes.append(route_properties.copy())
-                route_properties['trips'] = [trip_properties]
+                route_properties["trips"] = [trip_properties]
                 add_card_dict["routes"].append(route_properties)
 
-        # new route properties are saved in added_routes 
+        # new route properties are saved in added_routes
         # only append add_card_dict when new transit routes get added
-        if len(added_routes)>0:
+        if len(added_routes) > 0:
             project_card_changes.append(add_card_dict)
 
         return project_card_changes
@@ -507,15 +538,20 @@ class CubeTransit(object):
         Returns:
             A project card change-formatted dictionary for the attribute update.
         """
-        time_period_list = self.calculate_start_end_times(
-            self.line_properties[line]
-        )
+        time_period_list = self.calculate_start_end_times(self.line_properties[line])
 
-        route_id, direction_id, shp_index = CubeTransit.get_route_dir_shpindex_from_route_name(line)
+        (
+            route_id,
+            direction_id,
+            shp_index,
+        ) = CubeTransit.get_route_dir_shpindex_from_route_name(line)
 
         if "start_time" in updated_properties_dict:
-            time_period_list=[
-                (updated_properties_dict["start_time"], updated_properties_dict["end_time"])
+            time_period_list = [
+                (
+                    updated_properties_dict["start_time"],
+                    updated_properties_dict["end_time"],
+                )
             ]
             updated_properties_dict.pop("start_time")
             updated_properties_dict.pop("end_time")
@@ -525,15 +561,17 @@ class CubeTransit(object):
             "facility": {
                 "route_id": route_id,
                 "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(
-                    shp_index
-                ) if self.transit_shape_crosswalk_dict else shp_index,
+                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
+                if self.transit_shape_crosswalk_dict
+                else shp_index,
                 "shape_index": shp_index,
                 "time_periods": [
                     {"start_time": tp[0], "end_time": tp[1]} for tp in time_period_list
                 ],
             },
-            "properties": updated_properties_dict if isinstance(updated_properties_dict, list) else [updated_properties_dict]
+            "properties": updated_properties_dict
+            if isinstance(updated_properties_dict, list)
+            else [updated_properties_dict],
         }
         WranglerLogger.debug(
             "Updating {} route to changes:\n{}".format(line, str(update_card_dict))
@@ -565,24 +603,31 @@ class CubeTransit(object):
             build_time_period_list = self.calculate_start_end_times(
                 self.line_properties[line]
             )
-            delete_time_period_list = list(set(base_time_period_list) - set(build_time_period_list))
+            delete_time_period_list = list(
+                set(base_time_period_list) - set(build_time_period_list)
+            )
         else:
             # delete the entire line
             delete_time_period_list = base_time_period_list
 
-        route_id, direction_id, shp_index = CubeTransit.get_route_dir_shpindex_from_route_name(line)
+        (
+            route_id,
+            direction_id,
+            shp_index,
+        ) = CubeTransit.get_route_dir_shpindex_from_route_name(line)
 
         delete_card_dict = {
             "category": "Delete Transit Service",
             "facility": {
                 "route_id": route_id,
                 "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(
-                    shp_index
-                ) if self.transit_shape_crosswalk_dict else shp_index,
+                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
+                if self.transit_shape_crosswalk_dict
+                else shp_index,
                 "shape_index": shp_index,
                 "time_periods": [
-                    {"start_time": tp[0], "end_time": tp[1]} for tp in delete_time_period_list
+                    {"start_time": tp[0], "end_time": tp[1]}
+                    for tp in delete_time_period_list
                 ],
             },
         }
@@ -634,9 +679,7 @@ class CubeTransit(object):
         )
         return add_card_dict
 
-    def create_routing_properties(
-        self, line: str
-    ):
+    def create_routing_properties(self, line: str):
         """
         Creates a project card formatted dictionary for adding a new line.
 
@@ -653,32 +696,42 @@ class CubeTransit(object):
         # add entire new line
         headway_sec = []
         for key, value in cube_properties_dict.items():
-            if 'HEADWAY' in key:
-                time_period_number = key.split('[')[1].rstrip(']')
+            if "HEADWAY" in key:
+                time_period_number = key.split("[")[1].rstrip("]")
                 time_period_name = self.parameters.cube_time_periods[time_period_number]
-                time_period_range = self.parameters.time_period_to_time[time_period_name]
-                headway_sec.append({f'{time_period_range}':value*60})
+                time_period_range = self.parameters.time_period_to_time[
+                    time_period_name
+                ]
+                headway_sec.append({f"{time_period_range}": value * 60})
 
-        route_id, direction_id, _ = CubeTransit.get_route_dir_shpindex_from_route_name(line) 
-        route_short_name = cube_properties_dict['SHORTNAME'].replace("'", "").replace("\"", "")
-        route_long_name = cube_properties_dict['LONGNAME'].replace("'", "").replace("\"", "")
-        route_type = self.parameters.cube_mode_to_route_type[cube_properties_dict['MODE']]
+        route_id, direction_id, _ = CubeTransit.get_route_dir_shpindex_from_route_name(
+            line
+        )
+        route_short_name = (
+            cube_properties_dict["SHORTNAME"].replace("'", "").replace('"', "")
+        )
+        route_long_name = (
+            cube_properties_dict["LONGNAME"].replace("'", "").replace('"', "")
+        )
+        route_type = self.parameters.cube_mode_to_route_type[
+            cube_properties_dict["MODE"]
+        ]
         agency_raw_name = self.parameters.default_agency_raw_name
 
         operator_to_agency_id_dict = {}
         for key, value in self.parameters.metro_operator_dict.items():
             if value not in operator_to_agency_id_dict:
                 operator_to_agency_id_dict[value] = int(key)
-        agency_id = operator_to_agency_id_dict[cube_properties_dict['OPERATOR']]
-        
+        agency_id = operator_to_agency_id_dict[cube_properties_dict["OPERATOR"]]
+
         route_properties = {
             "route_id": route_id,
-            "route_short_name":route_short_name,
-            "route_long_name":route_long_name,
-            "route_type":route_type,
-            "agency_raw_name":agency_raw_name,
-            "agency_id":agency_id,
-            "trips":[]
+            "route_short_name": route_short_name,
+            "route_long_name": route_long_name,
+            "route_type": route_type,
+            "agency_raw_name": agency_raw_name,
+            "agency_id": agency_id,
+            "trips": [],
         }
 
         trip_properties = {
@@ -689,10 +742,10 @@ class CubeTransit(object):
 
         # TODO: alight, board, and time_to_next_node_sec
         for _, row in self.shapes[line].iterrows():
-            if row['stop']:
-                trip_properties['routing'].append({row['node']: {'stop': True}})
+            if row["stop"]:
+                trip_properties["routing"].append({row["node"]: {"stop": True}})
             else:
-                trip_properties['routing'].append(abs(row['node']))
+                trip_properties["routing"].append(abs(row["node"]))
 
         return route_properties, trip_properties
 
@@ -792,8 +845,8 @@ class CubeTransit(object):
             raise ValueError(
                 "line name {} is not in the correct format. "
                 "Expected format: [route id]_[direction id]_[time periods]_[shape index] or "
-                "[route id]_[direction id]_[shape index]".format(
-                line_name))
+                "[route id]_[direction id]_[shape index]".format(line_name)
+            )
         else:
             route_id = parts[0]
             direction_id = parts[1]
@@ -817,8 +870,10 @@ class CubeTransit(object):
                 self.parameters.time_period_properties_list
             )
         )
-        current_cube_time_period_numbers = CubeTransit.get_time_period_numbers_from_cube_properties(
-            line_properties_dict
+        current_cube_time_period_numbers = (
+            CubeTransit.get_time_period_numbers_from_cube_properties(
+                line_properties_dict
+            )
         )
 
         WranglerLogger.debug(
@@ -912,13 +967,11 @@ class CubeTransit(object):
             # don't add line NAME change to project card
             # when a time period get deleted and removed from line NAME
             # Lasso will rebuild the line NAME based on existing time periods
-            if k == 'NAME':
+            if k == "NAME":
                 continue
             elif any(i in k for i in ["HEADWAY", "FREQ"]):
                 change_item["property"] = "headway_secs"
-                tp_name = self.parameters.cube_time_periods[
-                    k.split("[")[1][0]
-                ]
+                tp_name = self.parameters.cube_time_periods[k.split("[")[1][0]]
 
                 if absolute:
                     change_item["set"] = (
@@ -930,9 +983,13 @@ class CubeTransit(object):
                     ) * 60
                 if validate_base or not absolute:
                     change_item["existing"] = properties_base_dict[k] * 60
-                
-                change_item["start_time"] = self.parameters.time_period_to_time[tp_name][0]
-                change_item["end_time"] = self.parameters.time_period_to_time[tp_name][1]
+
+                change_item["start_time"] = self.parameters.time_period_to_time[
+                    tp_name
+                ][0]
+                change_item["end_time"] = self.parameters.time_period_to_time[tp_name][
+                    1
+                ]
             else:
                 change_item["property"] = k
                 change_item["set"] = v
@@ -1008,18 +1065,19 @@ class CubeTransit(object):
                 )
             ]
 
-            # When route has complicated loops, 
+            # When route has complicated loops,
             # for condition below where Lasso could not identify the start or end point
             # ask Lasso to dump out the complete node sequence for existing and set
-            if len(existing)==0 or len(set)==0:
+            if len(existing) == 0 or len(set) == 0:
                 existing = base_node_list
-                set = build_node_list   
+                set = build_node_list
 
             shape_change_list.append(
                 {"property": "routing", "existing": existing, "set": set}
             )
 
         return shape_change_list
+
 
 def transit_standard_to_met_council_transit_network(
     transit_net=None, parameters=None, line_name_xwalk: str = None
@@ -1037,15 +1095,21 @@ def transit_standard_to_met_council_transit_network(
         )
         WranglerLogger.error(msg)
         raise ValueError(msg)
-    
-    trip_cube_df = route_properties_gtfs_to_cube(transit_net, parameters, line_name_xwalk)
-    trip_cube_df["LIN"] = trip_cube_df.apply(lambda row: cube_format(transit_net, row), axis=1)
+
+    trip_cube_df = route_properties_gtfs_to_cube(
+        transit_net, parameters, line_name_xwalk
+    )
+    trip_cube_df["LIN"] = trip_cube_df.apply(
+        lambda row: cube_format(transit_net, row), axis=1
+    )
     transit_net.feed.trips_metcouncil_df = trip_cube_df
 
     return transit_net
 
 
-def route_properties_gtfs_to_cube(transit_net=None, parameters=None, line_name_xwalk: str = None):
+def route_properties_gtfs_to_cube(
+    transit_net=None, parameters=None, line_name_xwalk: str = None
+):
     """
     Prepare gtfs for cube lin file.
 
@@ -1081,29 +1145,29 @@ def route_properties_gtfs_to_cube(transit_net=None, parameters=None, line_name_x
         )
         WranglerLogger.error(msg)
         raise ValueError(msg)
-    
+
     shape_df = transit_net.feed.shapes.copy()
     trip_df = transit_net.feed.trips.copy()
 
     """
     Add information from: routes, frequencies, and routetype to trips_df
     """
-    trip_df = pd.merge(trip_df, transit_net.feed.routes, how="left", on=['agency_raw_name',"route_id"])
     trip_df = pd.merge(
-        trip_df, 
-        transit_net.feed.frequencies[['agency_raw_name', 'trip_id', 'start_time', 'headway_secs']], 
-        how="left", 
-        on=['agency_raw_name',"trip_id"]
+        trip_df, transit_net.feed.routes, how="left", on=["agency_raw_name", "route_id"]
+    )
+    trip_df = pd.merge(
+        trip_df,
+        transit_net.feed.frequencies[
+            ["agency_raw_name", "trip_id", "start_time", "headway_secs"]
+        ],
+        how="left",
+        on=["agency_raw_name", "trip_id"],
     )
 
     trip_df["tod_name"] = trip_df.start_time.apply(transit_net.time_to_cube_time_period)
-    inv_cube_time_periods_map = {
-        v: k for k, v in parameters.cube_time_periods.items()
-    }
+    inv_cube_time_periods_map = {v: k for k, v in parameters.cube_time_periods.items()}
     trip_df["tod_num"] = trip_df.tod_name.map(inv_cube_time_periods_map)
-    trip_df["tod_name"] = trip_df.tod_name.map(
-        parameters.cube_time_periods_name
-    )
+    trip_df["tod_name"] = trip_df.tod_name.map(parameters.cube_time_periods_name)
 
     # add shape_id to name when N most common pattern is used for routes*tod*direction
     # trip_df["shp_index"] = trip_df.groupby(['agency_raw_name', "route_id", "tod_name", "direction_id"]).cumcount()+1
@@ -1111,43 +1175,74 @@ def route_properties_gtfs_to_cube(transit_net=None, parameters=None, line_name_x
     # trip_df["shp_index"] = "shp" + trip_df["shp_index"]
 
     # use shape_id from shape_df in case any trips get deleted via project cards
-    unique_sorted = sorted(shape_df['shape_id'].unique()) 
-    rank_mapping = {shape_id: rank+1 for rank, shape_id in enumerate(unique_sorted)}
-    trip_df['shp_index'] = trip_df['shape_id'].map(rank_mapping)
+    unique_sorted = sorted(shape_df["shape_id"].unique())
+    rank_mapping = {shape_id: rank + 1 for rank, shape_id in enumerate(unique_sorted)}
+    trip_df["shp_index"] = trip_df["shape_id"].map(rank_mapping)
 
-    trip_df["route_short_name"] = trip_df["route_short_name"].str.replace("-", "_").str.replace(" ", ".").str.replace(",", "_").str.slice(stop = 50)
+    trip_df["route_short_name"] = (
+        trip_df["route_short_name"]
+        .str.replace("-", "_")
+        .str.replace(" ", ".")
+        .str.replace(",", "_")
+        .str.slice(stop=50)
+    )
 
-    trip_df["route_long_name"] = trip_df["route_long_name"].str.replace(",", "_").str.slice(stop = 50)
+    trip_df["route_long_name"] = (
+        trip_df["route_long_name"].str.replace(",", "_").str.slice(stop=50)
+    )
 
     # CUBE max string length
     # trip_df["NAME"] = trip_df["NAME"].str.slice(stop = 28)
 
     trip_df["LONGNAME"] = trip_df["route_long_name"]
     # CUBE max string length
-    trip_df["LONGNAME"] = trip_df["LONGNAME"].str.slice(stop = 30)
+    trip_df["LONGNAME"] = trip_df["LONGNAME"].str.slice(stop=30)
 
     trip_df["HEADWAY"] = (trip_df["headway_secs"] / 60).astype(int)
     trip_df["MODE"] = trip_df.apply(calculate_cube_mode, axis=1)
     trip_df["ONEWAY"] = "T"
     # trip_df["OPERATOR"] = trip_df["agency_id"].map(metro_operator_dict)
-    trip_df["OPERATOR"] = trip_df.apply(lambda row: parameters.mvta_operator_dict.get(row['agency_id']) if row['agency_raw_name'] == 'mvta' 
-                                        else parameters.metro_operator_dict.get(row['agency_id']), 
-                                        axis=1)
-    trip_df["SHORTNAME"] = trip_df["route_short_name"].str.slice(stop = 30)
+    trip_df["OPERATOR"] = trip_df.apply(
+        lambda row: parameters.mvta_operator_dict.get(row["agency_id"])
+        if row["agency_raw_name"] == "mvta"
+        else parameters.metro_operator_dict.get(row["agency_id"]),
+        axis=1,
+    )
+    trip_df["SHORTNAME"] = trip_df["route_short_name"].str.slice(stop=30)
 
     def create_dict(group_df, key_col, value_col):
-        group_dict = {key: value for key, value in zip(group_df[key_col], group_df[value_col])}
+        group_dict = {
+            key: value for key, value in zip(group_df[key_col], group_df[value_col])
+        }
         sorted_dict = {key: group_dict[key] for key in sorted(group_dict)}
         return sorted_dict
 
-    group_tod_hdw_df = trip_df.groupby(['agency_id','route_id','direction_id','shp_index']).apply(lambda x: create_dict(x, 'tod_num', 'HEADWAY')).reset_index(name='TOD_HDW')
-    trip_df = pd.merge(trip_df, group_tod_hdw_df, on=['agency_id','route_id','direction_id','shp_index'], how='left')
+    group_tod_hdw_df = (
+        trip_df.groupby(["agency_id", "route_id", "direction_id", "shp_index"])
+        .apply(lambda x: create_dict(x, "tod_num", "HEADWAY"))
+        .reset_index(name="TOD_HDW")
+    )
+    trip_df = pd.merge(
+        trip_df,
+        group_tod_hdw_df,
+        on=["agency_id", "route_id", "direction_id", "shp_index"],
+        how="left",
+    )
 
-    group_tod_name_df = trip_df.groupby(['agency_id','route_id','direction_id','shp_index']).apply(lambda x: create_dict(x, 'tod_num', 'tod_name')).reset_index(name='TOD')
-    trip_df = pd.merge(trip_df, group_tod_name_df, on=['agency_id','route_id','direction_id','shp_index'], how='left')
-    
+    group_tod_name_df = (
+        trip_df.groupby(["agency_id", "route_id", "direction_id", "shp_index"])
+        .apply(lambda x: create_dict(x, "tod_num", "tod_name"))
+        .reset_index(name="TOD")
+    )
+    trip_df = pd.merge(
+        trip_df,
+        group_tod_name_df,
+        on=["agency_id", "route_id", "direction_id", "shp_index"],
+        how="left",
+    )
+
     trip_df["NAME"] = trip_df.apply(
-        lambda x: 
+        lambda x:
         # str(x.agency_id)
         # + "_"
         str(x.route_id)
@@ -1161,13 +1256,28 @@ def route_properties_gtfs_to_cube(transit_net=None, parameters=None, line_name_x
         axis=1,
     )
     # CUBE max string length
-    trip_df["NAME"] = trip_df["NAME"].str.slice(stop = 28)
+    trip_df["NAME"] = trip_df["NAME"].str.slice(stop=28)
 
-    trip_df[['agency_id','route_id','tod_name','tod_num','direction_id','shape_id','shp_index','NAME','SHORTNAME']].to_csv(line_name_xwalk,index=False)
+    trip_df[
+        [
+            "agency_id",
+            "route_id",
+            "tod_name",
+            "tod_num",
+            "direction_id",
+            "shape_id",
+            "shp_index",
+            "NAME",
+            "SHORTNAME",
+        ]
+    ].to_csv(line_name_xwalk, index=False)
 
-    trip_df.drop_duplicates(subset=['agency_id','route_id','direction_id','shp_index'], inplace=True)
+    trip_df.drop_duplicates(
+        subset=["agency_id", "route_id", "direction_id", "shp_index"], inplace=True
+    )
 
     return trip_df
+
 
 def calculate_cube_mode(row) -> int:
     """
@@ -1213,7 +1323,8 @@ def calculate_cube_mode(row) -> int:
     if not cube_mode:
         if "express" in str(row["route_long_name"]).lower():
             cube_mode = 7  # Express
-        elif (row["route_id"].split("-")[0].isdigit() 
+        elif (
+            row["route_id"].split("-")[0].isdigit()
             and int(row["route_id"].split("-")[0]) > 99
         ):
             cube_mode = 6  # Suburban Local
@@ -1221,6 +1332,7 @@ def calculate_cube_mode(row) -> int:
             cube_mode = 5  # Urban Local
 
     return cube_mode
+
 
 def shape_gtfs_to_cube(transit_net, row):
     """
@@ -1236,81 +1348,111 @@ def shape_gtfs_to_cube(transit_net, row):
     """
     # check if model node id is in standard transit
     # if not, need to join with roadway to get model node id
-    roadway_nodes_df = transit_net.road_net.nodes_df[['shst_node_id', 'osm_node_id', 'model_node_id']].copy()
-    roadway_nodes_df['osm_node_id'] = roadway_nodes_df['osm_node_id'].fillna(0)
+    roadway_nodes_df = transit_net.road_net.nodes_df[
+        ["shst_node_id", "osm_node_id", "model_node_id"]
+    ].copy()
+    roadway_nodes_df["osm_node_id"] = roadway_nodes_df["osm_node_id"].fillna(0)
 
-    if 'osm_node_id' in transit_net.feed.stops.columns:
-        transit_net.feed.stops['osm_node_id'] = transit_net.feed.stops['osm_node_id'].fillna(0)
-        transit_net.feed.stops['osm_node_id'] = transit_net.feed.stops['osm_node_id'].astype(float)
-    if 'shape_osm_node_id' in transit_net.feed.shapes.columns:
-        transit_net.feed.shapes['shape_osm_node_id'] = transit_net.feed.shapes['shape_osm_node_id'].fillna(0)
-        transit_net.feed.shapes['shape_osm_node_id'] = transit_net.feed.shapes['shape_osm_node_id'].astype(float)
-    
+    if "osm_node_id" in transit_net.feed.stops.columns:
+        transit_net.feed.stops["osm_node_id"] = transit_net.feed.stops[
+            "osm_node_id"
+        ].fillna(0)
+        transit_net.feed.stops["osm_node_id"] = transit_net.feed.stops[
+            "osm_node_id"
+        ].astype(float)
+    if "shape_osm_node_id" in transit_net.feed.shapes.columns:
+        transit_net.feed.shapes["shape_osm_node_id"] = transit_net.feed.shapes[
+            "shape_osm_node_id"
+        ].fillna(0)
+        transit_net.feed.shapes["shape_osm_node_id"] = transit_net.feed.shapes[
+            "shape_osm_node_id"
+        ].astype(float)
+
     stops_df = transit_net.feed.stops.copy()
-    stops_missing_id_df = stops_df[(stops_df['model_node_id'].isnull() )| (stops_df['model_node_id']=="")].copy()
-    stops_with_id_df = stops_df[~((stops_df['model_node_id'].isnull() )| (stops_df['model_node_id']==""))].copy()
+    stops_missing_id_df = stops_df[
+        (stops_df["model_node_id"].isnull()) | (stops_df["model_node_id"] == "")
+    ].copy()
+    stops_with_id_df = stops_df[
+        ~((stops_df["model_node_id"].isnull()) | (stops_df["model_node_id"] == ""))
+    ].copy()
 
-    if 'model_node_id' in stops_missing_id_df.columns:
-        stops_missing_id_df = stops_missing_id_df.drop('model_node_id', axis = 1)
+    if "model_node_id" in stops_missing_id_df.columns:
+        stops_missing_id_df = stops_missing_id_df.drop("model_node_id", axis=1)
 
     stops_join_df = pd.merge(
         stops_missing_id_df,
         roadway_nodes_df,
-        how = 'left',
-        on = ['shst_node_id', 'osm_node_id']
+        how="left",
+        on=["shst_node_id", "osm_node_id"],
     )
 
-    final_stops_df = pd.concat([stops_with_id_df,stops_join_df])
+    final_stops_df = pd.concat([stops_with_id_df, stops_join_df])
     assert len(final_stops_df) == len(stops_df)
     transit_net.feed.stops = final_stops_df
 
     shapes_df = transit_net.feed.shapes.copy()
     # rail shapes missing shape_model_node_id
-    shapes_missing_id_df = shapes_df[(shapes_df['shape_model_node_id'].isnull()) | (shapes_df['shape_model_node_id']=="")].copy()
+    shapes_missing_id_df = shapes_df[
+        (shapes_df["shape_model_node_id"].isnull())
+        | (shapes_df["shape_model_node_id"] == "")
+    ].copy()
     # bus shapes have shape_model_node_id
-    shapes_with_id_df = shapes_df[~((shapes_df['shape_model_node_id'].isnull()) | (shapes_df['shape_model_node_id']==""))].copy()
+    shapes_with_id_df = shapes_df[
+        ~(
+            (shapes_df["shape_model_node_id"].isnull())
+            | (shapes_df["shape_model_node_id"] == "")
+        )
+    ].copy()
 
-    if 'shape_model_node_id' in shapes_missing_id_df.columns:
-        shapes_missing_id_df = shapes_missing_id_df.drop('shape_model_node_id', axis = 1)
+    if "shape_model_node_id" in shapes_missing_id_df.columns:
+        shapes_missing_id_df = shapes_missing_id_df.drop("shape_model_node_id", axis=1)
 
     shapes_join_df = pd.merge(
         shapes_missing_id_df,
         roadway_nodes_df.rename(
-            columns = {
-                'shst_node_id' : 'shape_shst_node_id',
-                'osm_node_id' : 'shape_osm_node_id',
-                'model_node_id' : 'shape_model_node_id',
+            columns={
+                "shst_node_id": "shape_shst_node_id",
+                "osm_node_id": "shape_osm_node_id",
+                "model_node_id": "shape_model_node_id",
             }
         ),
-        how = 'left',
-        on = ['shape_shst_node_id', 'shape_osm_node_id']
+        how="left",
+        on=["shape_shst_node_id", "shape_osm_node_id"],
     )
 
-    final_shapes_df = pd.concat([shapes_with_id_df,shapes_join_df])
+    final_shapes_df = pd.concat([shapes_with_id_df, shapes_join_df])
     assert len(final_shapes_df) == len(shapes_df)
 
-    final_shapes_df = final_shapes_df.sort_values(by='shape_pt_sequence', ascending=True)
+    final_shapes_df = final_shapes_df.sort_values(
+        by="shape_pt_sequence", ascending=True
+    )
     transit_net.feed.shapes = final_shapes_df
-    
+
     trip_stop_times_df = transit_net.feed.stop_times.copy()
     trip_stop_times_df = trip_stop_times_df[
-        (trip_stop_times_df.trip_id == row.trip_id) &
-        (trip_stop_times_df.agency_raw_name == row.agency_raw_name)
+        (trip_stop_times_df.trip_id == row.trip_id)
+        & (trip_stop_times_df.agency_raw_name == row.agency_raw_name)
     ]
 
     trip_node_df = transit_net.feed.shapes.copy()
     trip_node_df = trip_node_df[
-        (trip_node_df.shape_id == row.shape_id) &
-        (trip_node_df.agency_raw_name == row.agency_raw_name)
+        (trip_node_df.shape_id == row.shape_id)
+        & (trip_node_df.agency_raw_name == row.agency_raw_name)
     ]
 
     if row.route_type == 3:
         trip_stop_times_df = pd.merge(
-            trip_stop_times_df, transit_net.feed.stops, how="left", on=['agency_raw_name', "stop_id", 'trip_id']
+            trip_stop_times_df,
+            transit_net.feed.stops,
+            how="left",
+            on=["agency_raw_name", "stop_id", "trip_id"],
         )
     else:
         trip_stop_times_df = pd.merge(
-            trip_stop_times_df, transit_net.feed.stops, how="left", on=['agency_raw_name', "stop_id"]
+            trip_stop_times_df,
+            transit_net.feed.stops,
+            how="left",
+            on=["agency_raw_name", "stop_id"],
         )
 
     stop_node_id_list = trip_stop_times_df["model_node_id"].tolist()
@@ -1320,17 +1462,18 @@ def shape_gtfs_to_cube(transit_net, row):
 
     # node list
     node_list_str = ""
-    for nodeIdx in range(len(trip_node_list)):         
+    for nodeIdx in range(len(trip_node_list)):
         if trip_node_list[nodeIdx] in stop_node_id_list:
             node_list_str += "\n %s" % int(float(trip_node_list[nodeIdx]))
             if nodeIdx < (len(trip_node_list) - 1):
                 node_list_str += ","
-        else:                
+        else:
             node_list_str += "\n -%s" % int(float(trip_node_list[nodeIdx]))
             if nodeIdx < (len(trip_node_list) - 1):
                 node_list_str += ","
 
     return node_list_str
+
 
 def cube_format(transit_net, row):
     """
@@ -1352,7 +1495,7 @@ def cube_format(transit_net, row):
     s += "\n ONEWAY={},".format(row.ONEWAY)
     s += "\n OPERATOR={},".format(row.OPERATOR)
     s += '\n SHORTNAME="{}",'.format(row.SHORTNAME)
-    s += "\n NODES={}".format(shape_gtfs_to_cube(transit_net,row))
+    s += "\n NODES={}".format(shape_gtfs_to_cube(transit_net, row))
 
     return s
 

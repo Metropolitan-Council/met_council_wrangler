@@ -1,9 +1,11 @@
 import os
 from cube_wrangler.logger import WranglerLogger
+from cube_wrangler import Parameters
 
 
-def get_base_dir(base_dir=os.getcwd()):
-    d = base_dir
+
+def get_base_dir(metcouncil_wrangler_base_dir=os.getcwd()):
+    d = metcouncil_wrangler_base_dir
     for i in range(3):
         if "metcouncil_data" in os.listdir(d):
             WranglerLogger.info(
@@ -12,14 +14,14 @@ def get_base_dir(base_dir=os.getcwd()):
             return d
         d = os.path.dirname(d)
 
-    msg = "Cannot find MetCouncil Wrangler base directory from {}, please input using keyword in parameters: `lasso_base_dir =` ".format(
-        base_dir
+    msg = "Cannot find MetCouncil Wrangler base directory from {}, please input using keyword in parameters: `metcouncil_wrangler_base_dir =` ".format(
+        metcouncil_wrangler_base_dir
     )
     WranglerLogger.error(msg)
     raise (ValueError(msg))
 
 
-class MetCouncil_Parameters:
+class MetCouncil_Parameters(Parameters):
     """A class representing all the parameters defining the networks
     including time of day, categories, etc.
 
@@ -37,6 +39,8 @@ class MetCouncil_Parameters:
         constructor for the Parameters class
 
         """
+        super().__init__(**kwargs)
+
         if "time_periods_to_time" in kwargs:
             self.time_periods_to_time = kwargs.get("time_periods_to_time")
         else:
@@ -98,7 +102,7 @@ class MetCouncil_Parameters:
         """
         if "metcouncil_wrangler_base_dir" in kwargs:
             self.base_dir = get_base_dir(
-                lasso_base_dir=kwargs.get("metcouncil_wrangler_base_dir")
+                metcouncil_wrangler_base_dir=kwargs.get("metcouncil_wrangler_base_dir")
             )
         else:
             self.base_dir = get_base_dir()
@@ -310,6 +314,12 @@ class MetCouncil_Parameters:
             self.settings_location, "log_to_net.csv"
         )
 
+        self.calculated_values = [
+            "area_type",
+            "county",
+            "centroidconnect",
+        ]
+        
         self.output_variables = [
             "model_link_id",
             "link_id",

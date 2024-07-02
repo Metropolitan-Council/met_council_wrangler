@@ -561,17 +561,21 @@ class CubeTransit(object):
             "facility": {
                 "route_id": route_id,
                 "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
-                if self.transit_shape_crosswalk_dict
-                else shp_index,
+                "shape_id": (
+                    self.transit_shape_crosswalk_dict.get(shp_index)
+                    if self.transit_shape_crosswalk_dict
+                    else shp_index
+                ),
                 "shape_index": shp_index,
                 "time_periods": [
                     {"start_time": tp[0], "end_time": tp[1]} for tp in time_period_list
                 ],
             },
-            "properties": updated_properties_dict
-            if isinstance(updated_properties_dict, list)
-            else [updated_properties_dict],
+            "properties": (
+                updated_properties_dict
+                if isinstance(updated_properties_dict, list)
+                else [updated_properties_dict]
+            ),
         }
         WranglerLogger.debug(
             "Updating {} route to changes:\n{}".format(line, str(update_card_dict))
@@ -621,9 +625,11 @@ class CubeTransit(object):
             "facility": {
                 "route_id": route_id,
                 "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
-                if self.transit_shape_crosswalk_dict
-                else shp_index,
+                "shape_id": (
+                    self.transit_shape_crosswalk_dict.get(shp_index)
+                    if self.transit_shape_crosswalk_dict
+                    else shp_index
+                ),
                 "shape_index": shp_index,
                 "time_periods": [
                     {"start_time": tp[0], "end_time": tp[1]}
@@ -1203,9 +1209,11 @@ def route_properties_gtfs_to_cube(
     trip_df["ONEWAY"] = "T"
     # trip_df["OPERATOR"] = trip_df["agency_id"].map(metro_operator_dict)
     trip_df["OPERATOR"] = trip_df.apply(
-        lambda row: parameters.mvta_operator_dict.get(row["agency_id"])
-        if row["agency_raw_name"] == "mvta"
-        else parameters.metro_operator_dict.get(row["agency_id"]),
+        lambda row: (
+            parameters.mvta_operator_dict.get(row["agency_id"])
+            if row["agency_raw_name"] == "mvta"
+            else parameters.metro_operator_dict.get(row["agency_id"])
+        ),
         axis=1,
     )
     trip_df["SHORTNAME"] = trip_df["route_short_name"].str.slice(stop=30)

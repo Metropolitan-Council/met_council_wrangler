@@ -767,7 +767,6 @@ def calculate_number_of_lanes(
     overwrite=False,
     centroid_connect_lanes=1,
 ):
-
     """
     Computes the number of lanes using a heuristic defined in this method.
 
@@ -927,7 +926,6 @@ def calculate_number_of_lanes_from_reviewed_network(
     overwrite=False,
     centroid_connect_lanes=1,
 ):
-
     """
     Computes the number of lanes using a heuristic defined in this method.
 

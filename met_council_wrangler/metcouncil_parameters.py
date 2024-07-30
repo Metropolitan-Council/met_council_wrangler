@@ -74,13 +74,6 @@ class MetCouncil_Parameters(Parameters):
                 "hov3": ["hov3", "hov2", "default", "sov"],
                 "truck": ["trk", "sov", "default"],
             }
-            self.categories = {
-                # suffix, source (in order of search)
-                "sov": "sov",
-                "hov2": "hov2",
-                "hov3": "hov3",
-                "truck": "trk",
-            }
 
         # prefix, source variable, categories
         self.properties_to_split = {
@@ -545,11 +538,5 @@ class MetCouncil_Parameters(Parameters):
         }
 
         self.default_agency_raw_name = "metro_transit_10_27_23"
-
-        self.crs = 4326
-
-        self.crs_alt = 4269
-
-        self.roadway_network_unique_shape_key = "id"
 
         self.__dict__.update(kwargs)

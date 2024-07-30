@@ -9,22 +9,9 @@ from pyproj import CRS
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString, Point
 
-from network_wrangler.roadway.network import RoadwayNetwork
-from network_wrangler.roadway.utils import create_unique_shape_id
-
-# from cube_wrangler.roadway import ModelRoadwayNetwork
-from cube_wrangler.roadway import (
-    calculate_distance_miles,
-    create_ML_variable,
-    create_hov_corridor_variable,
-    create_managed_variable,
-    fill_na,
-    split_properties_by_time_period_and_category,
-    convert_int,
-    add_variable_using_shst_reference,
-    read_match_result,
-    get_attribute,
-)
+from network_wrangler import RoadwayNetwork
+from network_wrangler.utils import create_unique_shape_id
+from cube_wrangler.roadway import ModelRoadwayNetwork
 from cube_wrangler.logger import WranglerLogger
 from .metcouncil_parameters import MetCouncil_Parameters
 
@@ -70,8 +57,7 @@ def roadway_standard_to_met_council_network(
     if "managed" in roadway_net.links_df.columns:
         if 1 in roadway_net.links_df["managed"].values:
             WranglerLogger.info("Creating managed lane network.")
-            # roadway_net.create_managed_lane_network(in_place=True)
-            roadway_net.model_net
+            roadway_net.create_managed_lane_network(in_place=True)
 
         # when ML and assign_group projects are applied together, assign_group is filled as "" by wrangler for ML links
         for c in parameters.calculated_values:
@@ -80,52 +66,53 @@ def roadway_standard_to_met_council_network(
     else:
         WranglerLogger.info("Didn't detect managed lanes in network.")
 
-    roadway_net = calculate_distance_miles(roadway_net)
-    roadway_net = create_ML_variable(roadway_net)
-    roadway_net = create_hov_corridor_variable(roadway_net)
-    roadway_net = create_managed_variable(roadway_net)
+    roadway_net.create_calculated_variables()
+    roadway_net.create_ML_variable()
+    roadway_net.create_hov_corridor_variable()
+    roadway_net.create_managed_variable()
     roadway_net = calculate_area_type(roadway_net, parameters)
     roadway_net = calculate_county(roadway_net, parameters, overwrite=True)
     roadway_net = calculate_mpo(roadway_net, parameters)
     roadway_net = add_counts(roadway_net, parameters)
 
-    roadway_net = fill_na(roadway_net, parameters)
+    roadway_net.fill_na()
     # no method to calculate price yet, will be hard coded in project card
     WranglerLogger.info("Splitting variables by time period and category")
-    roadway_net = split_properties_by_time_period_and_category(
-        roadway_net, parameters, properties_to_split=parameters.properties_to_split
+    roadway_net.split_properties_by_time_period_and_category(
+        properties_to_split=parameters.properties_to_split
     )
-    roadway_net = convert_int(roadway_net, parameters, int_col_names=parameters.int_col)
+    roadway_net.convert_int(int_col_names=parameters.int_col)
 
-    # roadway_net.links_metcouncil_df = roadway_net.links_df.copy()
-    # roadway_net.nodes_metcouncil_df = roadway_net.nodes_df.copy()
+    roadway_net.links_metcouncil_df = roadway_net.links_df.copy()
+    roadway_net.nodes_metcouncil_df = roadway_net.nodes_df.copy()
 
-    roadway_net.links_df = pd.merge(
-        roadway_net.links_df.drop(
+    roadway_net.links_metcouncil_df = pd.merge(
+        roadway_net.links_metcouncil_df.drop(
             "geometry", axis=1
         ),  # drop the stick geometry in links_df
-        roadway_net.shapes_df[
-            [parameters.roadway_network_unique_shape_key, "geometry"]
-        ],
+        roadway_net.shapes_df[[RoadwayNetwork.UNIQUE_SHAPE_KEY, "geometry"]],
         how="left",
-        on=parameters.roadway_network_unique_shape_key,
+        on=RoadwayNetwork.UNIQUE_SHAPE_KEY,
     )
 
-    roadway_net.links_df = gpd.GeoDataFrame(roadway_net.links_df, geometry="geometry")
-    roadway_net.links_df.crs = "EPSG:4269"
-    roadway_net.nodes_df.crs = "EPSG:4269"
+    roadway_net.links_metcouncil_df.crs = "EPSG:4269"
+    roadway_net.nodes_metcouncil_df.crs = "EPSG:4269"
     WranglerLogger.info("Setting Coordinate Reference System to EPSG 26915")
-    roadway_net.links_df = roadway_net.links_df.to_crs(epsg=26915)
-    roadway_net.nodes_df = roadway_net.nodes_df.to_crs(epsg=26915)
+    roadway_net.links_metcouncil_df = roadway_net.links_metcouncil_df.to_crs(epsg=26915)
+    roadway_net.nodes_metcouncil_df = roadway_net.nodes_metcouncil_df.to_crs(epsg=26915)
 
-    roadway_net.nodes_df["X"] = roadway_net.nodes_df.geometry.apply(lambda g: g.x)
-    roadway_net.nodes_df["Y"] = roadway_net.nodes_df.geometry.apply(lambda g: g.y)
+    roadway_net.nodes_metcouncil_df["X"] = (
+        roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.x)
+    )
+    roadway_net.nodes_metcouncil_df["Y"] = (
+        roadway_net.nodes_metcouncil_df.geometry.apply(lambda g: g.y)
+    )
 
     # CUBE expect node id to be N
-    roadway_net.nodes_df.rename(columns={"model_node_id": "N"}, inplace=True)
+    roadway_net.nodes_metcouncil_df.rename(columns={"model_node_id": "N"}, inplace=True)
 
-    # roadway_net.links_df = roadway_net.links_metcouncil_df
-    # roadway_net.nodes_df = roadway_net.nodes_metcouncil_df
+    roadway_net.links_df = roadway_net.links_metcouncil_df
+    roadway_net.nodes_df = roadway_net.nodes_metcouncil_df
 
     return roadway_net
 
@@ -272,10 +259,10 @@ def calculate_area_type(
 
     WranglerLogger.debug("Reading Area Type Shapefile {}".format(area_type_shape))
     area_type_gdf = gpd.read_file(area_type_shape)
-    area_type_gdf = area_type_gdf.to_crs(epsg=parameters.crs)
+    area_type_gdf = area_type_gdf.to_crs(epsg=RoadwayNetwork.CRS)
 
     downtown_gdf = gpd.read_file(downtown_area_type_shape)
-    downtown_gdf = downtown_gdf.to_crs(epsg=parameters.crs)
+    downtown_gdf = downtown_gdf.to_crs(epsg=RoadwayNetwork.CRS)
 
     if (int(gpd.__version__.split(".")[0]) == 0) & (
         int(gpd.__version__.split(".")[1]) < 10
@@ -426,7 +413,7 @@ def calculate_county(
     centroids_gdf["geometry"] = centroids_gdf["geometry"].centroid
 
     county_gdf = gpd.read_file(county_shape)
-    county_gdf = county_gdf.to_crs(epsg=parameters.crs_alt)
+    county_gdf = county_gdf.to_crs(epsg=RoadwayNetwork.CRS_alt)
     joined_gdf = gpd.sjoin(centroids_gdf, county_gdf, how="left", op="intersects")
 
     joined_gdf[county_shape_variable] = (
@@ -657,8 +644,7 @@ def add_counts(
         )
     )
     # Add Minnesota Counts
-    roadway_net = add_variable_using_shst_reference(
-        roadway_net,
+    roadway_net.add_variable_using_shst_reference(
         var_shst_csvdata=mndot_count_shst_data,
         shst_csv_variable=mndot_count_variable_shp,
         network_variable=network_variable,
@@ -671,8 +657,7 @@ def add_counts(
         )
     )
     # Add Wisconsin Counts, but don't overwrite Minnesota
-    roadway_net = add_variable_using_shst_reference(
-        roadway_net,
+    roadway_net.add_variable_using_shst_reference(
         var_shst_csvdata=widot_count_shst_data,
         shst_csv_variable=widot_count_variable_shp,
         network_variable=network_variable,
@@ -782,7 +767,6 @@ def calculate_number_of_lanes(
     overwrite=False,
     centroid_connect_lanes=1,
 ):
-
     """
     Computes the number of lanes using a heuristic defined in this method.
 
@@ -942,7 +926,6 @@ def calculate_number_of_lanes_from_reviewed_network(
     overwrite=False,
     centroid_connect_lanes=1,
 ):
-
     """
     Computes the number of lanes using a heuristic defined in this method.
 
@@ -1335,13 +1318,13 @@ def calculate_assign_group_and_roadway_class(
     widot_gdf = gpd.read_file(widot_roadway_class_shape)
     widot_gdf["LINK_ID"] = range(1, 1 + len(widot_gdf))
     WranglerLogger.debug("WiDOT GDF Columns\n{}".format(widot_gdf.columns))
-    widot_shst_ref_df = read_match_result(widot_shst_data)
+    widot_shst_ref_df = ModelRoadwayNetwork.read_match_result(widot_shst_data)
     WranglerLogger.debug("widot shst ref df columns".format(widot_shst_ref_df.columns))
     # join MRCC geodataframe with MRCC shared street return to get MRCC route_sys and shared street geometry id
     #
     # get route_sys from MRCC
     # end up with OSM data with MRCC attributes
-    join_gdf = get_attribute(
+    join_gdf = ModelRoadwayNetwork.get_attribute(
         roadway_net.links_df,
         "shstGeometryId",
         mrcc_shst_ref_df,
@@ -1355,7 +1338,7 @@ def calculate_assign_group_and_roadway_class(
     else:
         join_gdf.rename(columns={"source_link_id": "mrcc_id"}, inplace=True)
 
-    join_gdf = get_attribute(
+    join_gdf = ModelRoadwayNetwork.get_attribute(
         join_gdf,
         "shstGeometryId",
         widot_shst_ref_df,
@@ -1996,15 +1979,9 @@ def add_centroid_and_centroid_connector(
     Start actual process
     """
 
-    centroid_gdf = pd.read_pickle(centroid_file).to_crs(roadway_network.nodes_df.crs)
-    centroid_connector_link_gdf = pd.read_pickle(centroid_connector_link_file).to_crs(
-        roadway_network.nodes_df.crs
-    )
-    centroid_connector_shape_gdf = pd.read_pickle(centroid_connector_shape_file).to_crs(
-        roadway_network.nodes_df.crs
-    )
-    if "shape_id" not in centroid_connector_shape_gdf.columns:
-        centroid_connector_shape_gdf["shape_id"] = centroid_connector_shape_gdf["id"]
+    centroid_gdf = pd.read_pickle(centroid_file)
+    centroid_connector_link_gdf = pd.read_pickle(centroid_connector_link_file)
+    centroid_connector_shape_gdf = pd.read_pickle(centroid_connector_shape_file)
 
     centroid_connector_link_gdf["lanes"] = 1
     centroid_connector_link_gdf["assign_group"] = 9
@@ -2191,9 +2168,6 @@ def add_rail_links_and_nodes(
     rail_links_gdf["roadway_class"] = 100
     rail_links_gdf["centroidconnect"] = 0
     rail_links_gdf["managed"] = 0
-    rail_links_gdf["drive_access"] = 0
-    rail_links_gdf["bus_only"] = 0
-    rail_links_gdf["rail_only"] = 1
 
     rail_nodes_gdf["X"] = rail_nodes_gdf.geometry.apply(lambda g: g.x)
     rail_nodes_gdf["Y"] = rail_nodes_gdf.geometry.apply(lambda g: g.y)
@@ -2364,13 +2338,10 @@ def add_rail_ae_connections(roadway_network, parameters):
             crs=roadway_network.links_df.crs,
         )
 
-        new_link_gdf[parameters.roadway_network_unique_shape_key] = new_link_gdf.apply(
+        new_link_gdf[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_link_gdf.apply(
             lambda x: create_unique_shape_id(x["geometry"]), axis=1
         )
 
-        new_link_gdf["shape_id"] = new_link_gdf[
-            parameters.roadway_network_unique_shape_key
-        ]
         new_link_gdf["drive_access"] = 1
         new_link_gdf["walk_access"] = 1
         new_link_gdf["bike_access"] = 1

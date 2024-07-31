@@ -74,6 +74,13 @@ class MetCouncil_Parameters(Parameters):
                 "hov3": ["hov3", "hov2", "default", "sov"],
                 "truck": ["trk", "sov", "default"],
             }
+            self.categories = {
+                # suffix, source (in order of search)
+                "sov": "sov",
+                "hov2": "hov2",
+                "hov3": "hov3",
+                "truck": "trk",
+            }
 
         # prefix, source variable, categories
         self.properties_to_split = {
@@ -319,7 +326,7 @@ class MetCouncil_Parameters(Parameters):
             "centroidconnect",
         ]
 
-        self.output_variables = [
+        self.output_link_variables = [
             "model_link_id",
             "link_id",
             "A",
@@ -408,6 +415,19 @@ class MetCouncil_Parameters(Parameters):
             "walk",
         ]
 
+        self.output_node_variables = [
+            "bike_access",
+            "walk_access",
+            "drive_access",
+            "N",
+            "osm_node_id",
+            "X",
+            "Y",
+            "bus_only",
+            "rail_only",
+            "county",
+        ]
+
         self.output_link_shp = os.path.join(self.scratch_location, "links.shp")
         self.output_node_shp = os.path.join(self.scratch_location, "nodes.shp")
         self.output_link_csv = os.path.join(self.scratch_location, "links.csv")
@@ -468,10 +488,10 @@ class MetCouncil_Parameters(Parameters):
             "count_daily",
             "centroidconnect",
             "bike_facility",
-            "drive_access",
-            "walk_access",
-            "bike_access",
-            "truck_access",
+            # "drive_access",
+            # "walk_access",
+            # "bike_access",
+            # "truck_access",
             "drive_node",
             "walk_node",
             "bike_node",
@@ -483,8 +503,8 @@ class MetCouncil_Parameters(Parameters):
             "ML_lanes_NT",
             "segment_id",
             "managed",
-            "bus_only",
-            "rail_only",
+            # "bus_only",
+            # "rail_only",
             "mrcc_id",
             "bike",
             "walk",
@@ -538,5 +558,11 @@ class MetCouncil_Parameters(Parameters):
         }
 
         self.default_agency_raw_name = "metro_transit_10_27_23"
+
+        self.crs = 4326
+
+        self.crs_alt = 4269
+
+        self.roadway_network_unique_shape_key = "id"
 
         self.__dict__.update(kwargs)

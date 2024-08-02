@@ -326,7 +326,7 @@ class MetCouncil_Parameters(Parameters):
             "centroidconnect",
         ]
 
-        self.output_link_variables = [
+        self.output_variables = [
             "model_link_id",
             "link_id",
             "A",
@@ -387,7 +387,7 @@ class MetCouncil_Parameters(Parameters):
             "count_PM",
             "count_NT",
             "count_daily",
-            "model_node_id",
+            # "model_node_id", # CUBE expect node id to be N
             "N",
             "osm_node_id",
             "bike_node",
@@ -413,19 +413,6 @@ class MetCouncil_Parameters(Parameters):
             "MNPASS_PAY",
             "bike",
             "walk",
-        ]
-
-        self.output_node_variables = [
-            "bike_access",
-            "walk_access",
-            "drive_access",
-            "N",
-            "osm_node_id",
-            "X",
-            "Y",
-            "bus_only",
-            "rail_only",
-            "county",
         ]
 
         self.output_link_shp = os.path.join(self.scratch_location, "links.shp")
@@ -563,6 +550,6 @@ class MetCouncil_Parameters(Parameters):
 
         self.crs_alt = 4269
 
-        self.roadway_network_unique_shape_key = "id"
+        self.roadway_network_unique_shape_key = "shape_id"
 
         self.__dict__.update(kwargs)

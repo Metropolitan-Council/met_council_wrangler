@@ -1101,7 +1101,7 @@ def transit_standard_to_met_council_transit_network(
     trip_cube_df["LIN"] = trip_cube_df.apply(
         lambda row: cube_format(transit_net, row), axis=1
     )
-    transit_net.feed.trips_metcouncil_df = trip_cube_df
+    transit_net.feed.trip_cube_df = trip_cube_df
 
     return transit_net
 

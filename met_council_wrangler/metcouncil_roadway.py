@@ -122,8 +122,8 @@ def roadway_standard_to_met_council_network(
     roadway_net.nodes_df["Y"] = roadway_net.nodes_df.geometry.apply(lambda g: g.y)
 
     # CUBE expect node id to be N
+    # still need to keep model_node_id field. It will be used to validate transit net in NW
     roadway_net.nodes_df["N"] = roadway_net.nodes_df["model_node_id"]
-    # roadway_net.nodes_df.rename(columns={"model_node_id": "N"}, inplace=True)
 
     return roadway_net
 

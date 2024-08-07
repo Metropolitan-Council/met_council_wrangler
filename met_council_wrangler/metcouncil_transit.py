@@ -639,48 +639,6 @@ class CubeTransit(object):
 
         return delete_card_dict
 
-    def create_add_route_card_dict(self, line: str):
-        """
-        Creates a project card change formatted dictionary for adding
-        a route based on the information in self.route_properties for
-        the line.
-
-        Args:
-            line: name of line that is being updated
-
-        Returns:
-            A project card change-formatted dictionary for the route addition.
-        """
-        start_time_str, end_time_str = self.calculate_start_end_times(
-            self.line_properties[line]
-        )
-
-        standard_properties = self.cube_properties_to_standard_properties(
-            self.line_properties[line]
-        )
-
-        routing_properties = {
-            "property": "routing",
-            "set": self.shapes[line]["node"].tolist(),
-        }
-
-        add_card_dict = {
-            "category": "New Transit Service",
-            "facility": {
-                "route_id": line.split("_")[1],
-                "direction_id": int(line.strip('"')[-1]),
-                "start_time": start_time_str,
-                "end_time": end_time_str,
-                "agency_id": int(line.strip('"')[0]),
-            },
-            "properties": standard_properties + [routing_properties],
-        }
-
-        WranglerLogger.debug(
-            "Adding {} route to changes:\n{}".format(line, add_card_dict)
-        )
-        return add_card_dict
-
     def create_routing_properties(self, line: str):
         """
         Creates a project card formatted dictionary for adding a new line.

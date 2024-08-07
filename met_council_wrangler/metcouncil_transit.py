@@ -398,7 +398,7 @@ class CubeTransit(object):
 
         """
         added_routes = []
-        add_card_dict = {"category": "Add New Route", "routes": []}
+        add_card_dict = {"transit_route_addition": {"routes": []}}
 
         for line in lines_to_add:
 
@@ -416,7 +416,7 @@ class CubeTransit(object):
             ]
 
             if route_properties in added_routes:
-                for route in add_card_dict["routes"]:
+                for route in add_card_dict["transit_route_addition"]["routes"]:
                     if all(
                         route[attr] == route_properties[attr]
                         for attr in route_match_attributes
@@ -426,7 +426,7 @@ class CubeTransit(object):
             else:
                 added_routes.append(route_properties.copy())
                 route_properties["trips"] = [trip_properties]
-                add_card_dict["routes"].append(route_properties)
+                add_card_dict["transit_route_addition"]["routes"].append(route_properties)
 
         # new route properties are saved in added_routes
         # only append add_card_dict when new transit routes get added
@@ -616,19 +616,22 @@ class CubeTransit(object):
         ) = CubeTransit.get_route_dir_shpindex_from_route_name(line)
 
         delete_card_dict = {
-            "category": "Delete Transit Service",
-            "facility": {
-                "route_id": route_id,
-                "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
-                if self.transit_shape_crosswalk_dict
-                else shp_index,
-                "shape_index": shp_index,
-                "time_periods": [
-                    {"start_time": tp[0], "end_time": tp[1]}
-                    for tp in delete_time_period_list
-                ],
-            },
+            "transit_service_deletion": {
+                "service": {
+                    "trip_properties":{
+                        "route_id": [route_id],
+                        "direction_id": int(direction_id[1]),
+                        "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
+                        if self.transit_shape_crosswalk_dict
+                        else [shp_index],
+                        "shape_index": shp_index
+                    },
+                    "timespans": [
+                        [tp[0], tp[1]]
+                        for tp in delete_time_period_list
+                    ],
+                },
+            }
         }
         WranglerLogger.debug(
             "Deleting {} route to changes:\n{}".format(line, delete_card_dict)

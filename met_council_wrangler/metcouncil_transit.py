@@ -372,23 +372,21 @@ class CubeTransit(object):
             )
             if updated_properties:
                 for updates in updated_properties:
-                    update_prop_card_dict = self.create_update_route_card_dict(
+                    update_prop_card_dict = self.create_update_route_property_card_dict(
                         line, updates
                     )
                     project_card_changes.append(update_prop_card_dict)
 
             if updated_shapes:
-                for updates in updated_shapes:
-                    if (len(updates.get("existing")) == 0) or (
-                        len(updates.get("set")) == 0
-                    ):
+                for update, value in updated_shapes.items():
+                    if len(value) == 0:
                         WranglerLogger.info(
                             "Review transit routing project, manual correction needed for "
                             "line (route {}, direction {}, shape index {})!".format(
                                 route_id, direction_id, shp_index
                             )
                         )
-                update_shape_card_dict = self.create_update_route_card_dict(
+                update_shape_card_dict = self.create_update_route_shape_card_dict(
                     line, updated_shapes
                 )
                 project_card_changes.append(update_shape_card_dict)
@@ -523,7 +521,7 @@ class CubeTransit(object):
         )
         return new_tp_line_name
 
-    def create_update_route_card_dict(self, line: str, updated_properties_dict: dict):
+    def create_update_route_property_card_dict(self, line: str, updated_properties_dict: dict):
         """
         Creates a project card change formatted dictionary for updating
         the line.
@@ -556,21 +554,78 @@ class CubeTransit(object):
             updated_properties_dict.pop("end_time")
 
         update_card_dict = {
-            "category": "Transit Service Property Change",
-            "facility": {
-                "route_id": route_id,
-                "direction_id": int(direction_id[1]),
-                "shape_id": self.transit_shape_crosswalk_dict.get(shp_index)
-                if self.transit_shape_crosswalk_dict
-                else shp_index,
-                "shape_index": shp_index,
-                "time_periods": [
-                    {"start_time": tp[0], "end_time": tp[1]} for tp in time_period_list
-                ],
-            },
-            "properties": updated_properties_dict
-            if isinstance(updated_properties_dict, list)
-            else [updated_properties_dict],
+            "transit_property_change":{
+                "service": {
+                    "trip_properties":{
+                        "route_id": [route_id],
+                        "direction_id": int(direction_id[1]),
+                        "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
+                        if self.transit_shape_crosswalk_dict
+                        else [shp_index],
+                        "shape_index": shp_index,
+                    },
+                    "timespans": [
+                        [tp[0], tp[1]] for tp in time_period_list
+                    ],
+                },
+                "property_changes": updated_properties_dict
+                },
+        }
+        WranglerLogger.debug(
+            "Updating {} route to changes:\n{}".format(line, str(update_card_dict))
+        )
+
+        return update_card_dict
+
+    def create_update_route_shape_card_dict(self, line: str, updated_properties_dict: dict):
+        """
+        Creates a project card change formatted dictionary for updating
+        the line.
+
+        Args:
+            line: name of line that is being updated
+            updated_properties_dict: dictionary of attributes to update as
+                'property': <property name>,
+                'set': <new property value>
+
+        Returns:
+            A project card change-formatted dictionary for the attribute update.
+        """
+        time_period_list = self.calculate_start_end_times(self.line_properties[line])
+
+        (
+            route_id,
+            direction_id,
+            shp_index,
+        ) = CubeTransit.get_route_dir_shpindex_from_route_name(line)
+
+        if "start_time" in updated_properties_dict:
+            time_period_list = [
+                (
+                    updated_properties_dict["start_time"],
+                    updated_properties_dict["end_time"],
+                )
+            ]
+            updated_properties_dict.pop("start_time")
+            updated_properties_dict.pop("end_time")
+
+        update_card_dict = {
+            "transit_routing_change":{
+                "service": {
+                    "trip_properties":{
+                        "route_id": [route_id],
+                        "direction_id": int(direction_id[1]),
+                        "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
+                        if self.transit_shape_crosswalk_dict
+                        else [shp_index],
+                        "shape_index": shp_index,
+                    },
+                    "timespans": [
+                        [tp[0], tp[1]] for tp in time_period_list
+                    ],
+                },
+                "routing": updated_properties_dict
+                },
         }
         WranglerLogger.debug(
             "Updating {} route to changes:\n{}".format(line, str(update_card_dict))
@@ -930,19 +985,19 @@ class CubeTransit(object):
             if k == "NAME":
                 continue
             elif any(i in k for i in ["HEADWAY", "FREQ"]):
-                change_item["property"] = "headway_secs"
+                change_item.update({"headway_secs": {}})
                 tp_name = self.parameters.cube_time_periods[k.split("[")[1][0]]
 
                 if absolute:
-                    change_item["set"] = (
+                    change_item["headway_secs"]["set"] = (
                         v * 60
                     )  # project cards are in secs, cube is in minutes
                 else:
-                    change_item["change"] = (
+                    change_item["headway_secs"]["change"] = (
                         properties_build_dict[k] - properties_base_dict[k]
                     ) * 60
                 if validate_base or not absolute:
-                    change_item["existing"] = properties_base_dict[k] * 60
+                    change_item["headway_secs"]["existing"] = properties_base_dict[k] * 60
 
                 change_item["start_time"] = self.parameters.time_period_to_time[
                     tp_name
@@ -951,10 +1006,10 @@ class CubeTransit(object):
                     1
                 ]
             else:
-                change_item["property"] = k
-                change_item["set"] = v
+                change_item.update({f"{k}": {}})
+                change_item[f"{k}"]["set"] = v
                 if validate_base:
-                    change_item["existing"] = properties_base_dict[k]
+                    change_item[f"{k}"]["existing"] = properties_base_dict[k]
 
             properties_list.append(change_item)
         WranglerLogger.debug(
@@ -983,7 +1038,7 @@ class CubeTransit(object):
         if shape_build.node.equals(shape_base.node):
             return None
 
-        shape_change_list = []
+        shape_change_dict= {}
 
         base_node_list = shape_base.node.tolist()
         build_node_list = shape_build.node.tolist()
@@ -1032,11 +1087,14 @@ class CubeTransit(object):
                 existing = base_node_list
                 set = build_node_list
 
-            shape_change_list.append(
-                {"property": "routing", "existing": existing, "set": set}
+            shape_change_dict.update(
+                {
+                    "existing": existing, 
+                    "set": set
+                }
             )
 
-        return shape_change_list
+        return shape_change_dict
 
 
 def transit_standard_to_met_council_transit_network(
@@ -1342,28 +1400,6 @@ def shape_gtfs_to_cube(transit_net, row):
             "shape_osm_node_id"
         ].astype(float)
 
-    stops_df = transit_net.feed.stops.copy()
-    stops_missing_id_df = stops_df[
-        (stops_df["model_node_id"].isnull()) | (stops_df["model_node_id"] == "")
-    ].copy()
-    stops_with_id_df = stops_df[
-        ~((stops_df["model_node_id"].isnull()) | (stops_df["model_node_id"] == ""))
-    ].copy()
-
-    if "model_node_id" in stops_missing_id_df.columns:
-        stops_missing_id_df = stops_missing_id_df.drop("model_node_id", axis=1)
-
-    stops_join_df = pd.merge(
-        stops_missing_id_df,
-        roadway_nodes_df,
-        how="left",
-        on=["shst_node_id", "osm_node_id"],
-    )
-
-    final_stops_df = pd.concat([stops_with_id_df, stops_join_df])
-    assert len(final_stops_df) == len(stops_df)
-    transit_net.feed.stops = final_stops_df
-
     shapes_df = transit_net.feed.shapes.copy()
     # rail shapes missing shape_model_node_id
     shapes_missing_id_df = shapes_df[
@@ -1413,21 +1449,6 @@ def shape_gtfs_to_cube(transit_net, row):
         (trip_node_df.shape_id == row.shape_id)
         & (trip_node_df.agency_raw_name == row.agency_raw_name)
     ]
-
-    if row.route_type == 3:
-        trip_stop_times_df = pd.merge(
-            trip_stop_times_df,
-            transit_net.feed.stops,
-            how="left",
-            on=["agency_raw_name", "stop_id", "trip_id"],
-        )
-    else:
-        trip_stop_times_df = pd.merge(
-            trip_stop_times_df,
-            transit_net.feed.stops,
-            how="left",
-            on=["agency_raw_name", "stop_id"],
-        )
 
     stop_node_id_list = trip_stop_times_df["model_node_id"].tolist()
     stop_node_id_list = [float(node_id) for node_id in stop_node_id_list]

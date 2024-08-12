@@ -1411,7 +1411,7 @@ def calculate_assign_group_and_roadway_class(
                 return 98
             elif x.rail_only == True:
                 return 100
-            elif x.drive_access == True:
+            elif x.drive_access == False:
                 return 101
             elif x.assignment_group_mrcc > 0:
                 return int(x.assignment_group_mrcc)
@@ -1434,7 +1434,7 @@ def calculate_assign_group_and_roadway_class(
                 return 50
             elif x.rail_only == True:
                 return 100
-            elif x.drive_access == True:
+            elif x.drive_access == False:
                 return 101
             elif x.roadway_class_mrcc > 0:
                 return int(x.roadway_class_mrcc)
@@ -1694,7 +1694,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
             return 98
         elif x.rail_only == True:
             return 100
-        elif x.drive_access == True:
+        elif x.drive_access == False:
             if x.roadway == "cycleway":
                 return 101
             elif x.roadway == "footway":
@@ -1728,7 +1728,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
             return 50
         elif x.rail_only == True:
             return 100
-        elif x.drive_access == True:
+        elif x.drive_access == False:
             return 101
         elif x.rdclass_min > 0:
             if x.rdclass_min == x.rdclass_max:

@@ -2226,7 +2226,12 @@ def add_rail_links_and_nodes(
             + rail_links_gdf["toIntersectionId"]
         )
         rail_links_gdf["shstGeometryId"] = rail_links_gdf["shstReferenceId"]
-        rail_links_gdf["id"] = rail_links_gdf["shstReferenceId"]
+        rail_links_gdf["shape_id"] = rail_links_gdf["shstReferenceId"]
+
+    rail_links_dist = rail_links_gdf.copy()
+    rail_links_dist.crs = "EPSG:4326"
+    rail_links_dist = rail_links_dist.to_crs(epsg=26915)
+    rail_links_gdf['distance'] = rail_links_dist.geometry.length / 1609.34
 
     roadway_network.nodes_df = pd.concat(
         [

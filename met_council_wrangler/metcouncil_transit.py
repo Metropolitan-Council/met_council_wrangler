@@ -562,7 +562,7 @@ class CubeTransit(object):
                         "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
                         if self.transit_shape_crosswalk_dict
                         else [shp_index],
-                        "shape_index": shp_index,
+                        "# shape_index": shp_index,
                     },
                     "timespans": [
                         [tp[0], tp[1]] for tp in time_period_list
@@ -618,7 +618,7 @@ class CubeTransit(object):
                         "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
                         if self.transit_shape_crosswalk_dict
                         else [shp_index],
-                        "shape_index": shp_index,
+                        "# shape_index": shp_index,
                     },
                     "timespans": [
                         [tp[0], tp[1]] for tp in time_period_list
@@ -679,7 +679,7 @@ class CubeTransit(object):
                         "shape_id": [self.transit_shape_crosswalk_dict.get(shp_index)]
                         if self.transit_shape_crosswalk_dict
                         else [shp_index],
-                        "shape_index": shp_index
+                        "# shape_index": shp_index
                     },
                     "timespans": [
                         [tp[0], tp[1]]
@@ -709,7 +709,7 @@ class CubeTransit(object):
         cube_properties_dict = self.line_properties[line]
 
         # add entire new line
-        headway_sec = []
+        headway_secs = []
         for key, value in cube_properties_dict.items():
             if "HEADWAY" in key:
                 time_period_number = key.split("[")[1].rstrip("]")
@@ -717,7 +717,7 @@ class CubeTransit(object):
                 time_period_range = self.parameters.time_period_to_time[
                     time_period_name
                 ]
-                headway_sec.append({f"{time_period_range}": value * 60})
+                headway_secs.append({f"{time_period_range}": value * 60})
 
         route_id, direction_id, _ = CubeTransit.get_route_dir_shpindex_from_route_name(
             line
@@ -745,22 +745,22 @@ class CubeTransit(object):
             "route_long_name": route_long_name,
             "route_type": route_type,
             "agency_raw_name": agency_raw_name,
-            "agency_id": agency_id,
+            "agency_id": str(agency_id),
             "trips": [],
         }
 
         trip_properties = {
             "direction_id": int(direction_id[1]),
-            "headway_sec": headway_sec,
+            "headway_secs": headway_secs,
             "routing": [],
         }
 
         # TODO: alight, board, and time_to_next_node_sec
         for _, row in self.shapes[line].iterrows():
             if row["stop"]:
-                trip_properties["routing"].append({row["node"]: {"stop": True}})
+                trip_properties["routing"].append({str(row["node"]): {"stop": True}})
             else:
-                trip_properties["routing"].append(abs(row["node"]))
+                trip_properties["routing"].append(str(abs(row["node"])))
 
         return route_properties, trip_properties
 

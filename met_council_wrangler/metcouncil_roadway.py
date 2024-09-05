@@ -2390,6 +2390,7 @@ def add_rail_ae_connections(roadway_network, parameters):
         new_link_gdf["rail_only"] = False
         new_link_gdf["assign_group"] = 50
         new_link_gdf["roadway_class"] = 50
+        new_link_gdf["lanes"] = 0
 
         new_link_gdf.drop_duplicates(subset=["A", "B"], inplace=True)
 

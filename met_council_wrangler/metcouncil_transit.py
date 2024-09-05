@@ -1184,10 +1184,10 @@ def route_properties_gtfs_to_cube(
 
     def _time_to_seconds(time_value):
         if isinstance(time_value, pd.Timestamp):
-            time_str = time_value.strftime("%Y-%m-%d %H:%M:%S")
+            time_str = time_value.strftime("%H:%M:%S")
         else:
             time_str = time_value
-        dt = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+        dt = datetime.datetime.strptime(time_str, "%H:%M:%S")
         diff = dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)
         seconds = int(diff.total_seconds())
         return seconds
@@ -1450,7 +1450,7 @@ def shape_gtfs_to_cube(transit_net, row):
         & (trip_node_df.agency_raw_name == row.agency_raw_name)
     ]
 
-    stop_node_id_list = trip_stop_times_df["model_node_id"].tolist()
+    stop_node_id_list = trip_stop_times_df["stop_id"].tolist()
     stop_node_id_list = [float(node_id) for node_id in stop_node_id_list]
     trip_node_list = trip_node_df["shape_model_node_id"].tolist()
     trip_node_list = [float(node_id) for node_id in trip_node_list]

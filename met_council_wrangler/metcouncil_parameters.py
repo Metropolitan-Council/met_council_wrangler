@@ -74,6 +74,13 @@ class MetCouncil_Parameters(Parameters):
                 "hov3": ["hov3", "hov2", "default", "sov"],
                 "truck": ["trk", "sov", "default"],
             }
+            self.categories = {
+                # suffix, source (in order of search)
+                "sov": "sov",
+                "hov2": "hov2",
+                "hov3": "hov3",
+                "truck": "trk",
+            }
 
         # prefix, source variable, categories
         self.properties_to_split = {
@@ -346,22 +353,22 @@ class MetCouncil_Parameters(Parameters):
             "lanes_MD",
             "lanes_PM",
             "lanes_NT",
-            "price_sov_AM",
-            "price_hov2_AM",
-            "price_hov3_AM",
-            "price_truck_AM",
-            "price_sov_MD",
-            "price_hov2_MD",
-            "price_hov3_MD",
-            "price_truck_MD",
-            "price_sov_PM",
-            "price_hov2_PM",
-            "price_hov3_PM",
-            "price_truck_PM",
-            "price_sov_NT",
-            "price_hov2_NT",
-            "price_hov3_NT",
-            "price_truck_NT",
+            # "price_sov_AM",
+            # "price_hov2_AM",
+            # "price_hov3_AM",
+            # "price_truck_AM",
+            # "price_sov_MD",
+            # "price_hov2_MD",
+            # "price_hov3_MD",
+            # "price_truck_MD",
+            # "price_sov_PM",
+            # "price_hov2_PM",
+            # "price_hov3_PM",
+            # "price_truck_PM",
+            # "price_sov_NT",
+            # "price_hov2_NT",
+            # "price_hov3_NT",
+            # "price_truck_NT",
             "roadway_class_idx",
             "assign_group",
             "access_AM",
@@ -380,7 +387,7 @@ class MetCouncil_Parameters(Parameters):
             "count_PM",
             "count_NT",
             "count_daily",
-            "model_node_id",
+            # "model_node_id", # CUBE expect node id to be N
             "N",
             "osm_node_id",
             "bike_node",
@@ -468,10 +475,10 @@ class MetCouncil_Parameters(Parameters):
             "count_daily",
             "centroidconnect",
             "bike_facility",
-            "drive_access",
-            "walk_access",
-            "bike_access",
-            "truck_access",
+            # "drive_access",
+            # "walk_access",
+            # "bike_access",
+            # "truck_access",
             "drive_node",
             "walk_node",
             "bike_node",
@@ -483,8 +490,8 @@ class MetCouncil_Parameters(Parameters):
             "ML_lanes_NT",
             "segment_id",
             "managed",
-            "bus_only",
-            "rail_only",
+            # "bus_only",
+            # "rail_only",
             "mrcc_id",
             "bike",
             "walk",
@@ -538,5 +545,11 @@ class MetCouncil_Parameters(Parameters):
         }
 
         self.default_agency_raw_name = "metro_transit_10_27_23"
+
+        self.crs = 4326
+
+        self.crs_alt = 4269
+
+        self.roadway_network_unique_shape_key = "shape_id"
 
         self.__dict__.update(kwargs)

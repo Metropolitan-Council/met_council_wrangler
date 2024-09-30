@@ -71,8 +71,7 @@ def roadway_standard_to_met_council_network(
     if "managed" in roadway_net.links_df.columns:
         if 1 in roadway_net.links_df["managed"].values:
             WranglerLogger.info("Creating managed lane network.")
-            # roadway_net.create_managed_lane_network(in_place=True)
-            roadway_net.model_net
+            roadway_net = roadway_net.model_net
 
         # when ML and assign_group projects are applied together, assign_group is filled as "" by wrangler for ML links
         for c in parameters.calculated_values:
@@ -100,17 +99,24 @@ def roadway_standard_to_met_council_network(
     roadway_net = convert_bool(
         roadway_net, parameters, bool_col_names=parameters.bool_col
     )
-    roadway_net.links_df = pd.merge(
-        roadway_net.links_df.drop(
-            "geometry", axis=1
-        ),  # drop the stick geometry in links_df
-        roadway_net.shapes_df[
-            [parameters.roadway_network_unique_shape_key, "geometry"]
-        ],
-        how="left",
-        on=parameters.roadway_network_unique_shape_key,
-    )
 
+    links_with_shape_id = roadway_net.links_df[
+        roadway_net.links_df[parameters.roadway_network_unique_shape_key].isin(
+            roadway_net.shapes_df[parameters.roadway_network_unique_shape_key]
+        )
+    ]
+    links_without_shape_id = roadway_net.links_df[
+        ~roadway_net.links_df[parameters.roadway_network_unique_shape_key].isin(
+            roadway_net.shapes_df[parameters.roadway_network_unique_shape_key]
+        )
+    ]
+    links_with_shape_id = pd.merge(
+        links_with_shape_id.drop("geometry", axis=1),  # drop the original geometry
+        roadway_net.shapes_df[[parameters.roadway_network_unique_shape_key, "geometry"]],
+        how="left",
+        on=parameters.roadway_network_unique_shape_key
+    )
+    roadway_net.links_df = pd.concat([links_with_shape_id, links_without_shape_id], ignore_index=True)
     roadway_net.links_df = gpd.GeoDataFrame(roadway_net.links_df, geometry="geometry")
     roadway_net.links_df.crs = "EPSG:4269"
     roadway_net.nodes_df.crs = "EPSG:4269"
@@ -2011,11 +2017,21 @@ def add_centroid_and_centroid_connector(
     centroid_connector_link_gdf["roadway_class"] = 99
     centroid_connector_link_gdf["centroidconnect"] = 1
     centroid_connector_link_gdf["managed"] = 0
-    centroid_connector_link_gdf["drive_access"] = True
-    centroid_connector_link_gdf["walk_access"] = True
-    centroid_connector_link_gdf["bike_access"] = True
     centroid_connector_link_gdf["bus_only"] = False
     centroid_connector_link_gdf["rail_only"] = False
+    centroid_connector_link_gdf["distance"] = 0
+
+    for c in ["drive_access", "walk_access", "bike_access"]:
+        centroid_connector_link_gdf[c] = centroid_connector_link_gdf[c].replace(
+            {
+                "1": True,
+                1: True,
+                np.nan: False,
+                "": False,
+                "0": False,
+                0: False
+            }
+        )
 
     if "county" in centroid_connector_link_gdf.columns:
         centroid_connector_link_gdf["county"] = (
@@ -2391,6 +2407,12 @@ def add_rail_ae_connections(roadway_network, parameters):
         new_link_gdf["assign_group"] = 50
         new_link_gdf["roadway_class"] = 50
         new_link_gdf["lanes"] = 0
+        new_link_gdf["managed"] = 0
+
+        ae_links_dist = new_link_gdf.copy()
+        ae_links_dist.crs = "EPSG:4326"
+        ae_links_dist = ae_links_dist.to_crs(epsg=26915)
+        new_link_gdf['distance'] = ae_links_dist.geometry.length / 1609.34
 
         new_link_gdf.drop_duplicates(subset=["A", "B"], inplace=True)
 

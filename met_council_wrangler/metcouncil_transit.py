@@ -1114,6 +1114,19 @@ def transit_standard_to_met_council_transit_network(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
+    tables = [
+        transit_net.feed.routes,
+        transit_net.feed.trips,
+        transit_net.feed.shapes, 
+        transit_net.feed.frequencies, 
+        transit_net.feed.stop_times
+    ]
+    fill_missing_values_in_column(
+        tables, 
+        column_name='agency_raw_name', 
+        default_value=parameters.default_agency_raw_name
+    )
+
     trip_cube_df = route_properties_gtfs_to_cube(
         transit_net, parameters, line_name_xwalk
     )
@@ -1123,6 +1136,27 @@ def transit_standard_to_met_council_transit_network(
     transit_net.feed.trip_cube_df = trip_cube_df
 
     return transit_net
+
+
+def fill_missing_values_in_column(dataframes, column_name, default_value=0):
+    """
+    Checks if a column has any missing values in the given list of DataFrames.
+    If missing values are found, fills them with the default value.
+
+    Args:
+    dataframes (list): List of DataFrames to check and update.
+    column_name (str): The column name to check for missing values.
+    default_value: The value to assign to missing entries. Default is 0.
+    """
+    for df in dataframes:
+        if column_name in df.columns:
+            if df[column_name].isnull().any():
+                df[column_name].fillna(default_value, inplace=True)
+                print(f"Missing values found and filled in column '{column_name}'.")
+            else:
+                print(f"No missing values found in column '{column_name}'.")
+        else:
+            print(f"Column '{column_name}' not found.")
 
 
 def route_properties_gtfs_to_cube(

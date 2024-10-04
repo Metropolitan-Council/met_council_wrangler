@@ -2156,7 +2156,8 @@ def assign_link_id(roadway_network=None, add_links_df=None):
         add_links_df with unique link ids
 
     """
-    existing_max_id = roadway_network.links_df["model_link_id"].max()
+    existing_ids = roadway_network.links_df["model_link_id"].unique()
+    existing_max_id = max([id for id in existing_ids if id < 3000000])
 
     if "model_link_id" in add_links_df.columns:
         add_links_df.drop(["model_link_id"], axis=1, inplace=True)

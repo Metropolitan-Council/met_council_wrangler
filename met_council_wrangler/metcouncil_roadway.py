@@ -3,6 +3,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import glob
+import copy
 
 from pandas import DataFrame
 from pyproj import CRS
@@ -68,6 +69,9 @@ def roadway_standard_to_met_council_network(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+    node_attrs = copy.deepcopy(roadway_net.nodes_df.attrs)
+
     if "managed" in roadway_net.links_df.columns:
         if 1 in roadway_net.links_df["managed"].values:
             WranglerLogger.info("Creating managed lane network.")
@@ -130,6 +134,9 @@ def roadway_standard_to_met_council_network(
     # CUBE expect node id to be N
     # still need to keep model_node_id field. It will be used to validate transit net in NW
     roadway_net.nodes_df["N"] = roadway_net.nodes_df["model_node_id"]
+
+    roadway_net.links_df.attrs = link_attrs
+    roadway_net.nodes_df.attrs = node_attrs
 
     return roadway_net
 
@@ -271,6 +278,8 @@ def calculate_area_type(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+    
     centroids_gdf = roadway_net.links_df.copy()
     centroids_gdf["geometry"] = centroids_gdf["geometry"].centroid
 
@@ -341,6 +350,7 @@ def calculate_area_type(
             network_variable
         )
     )
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -425,6 +435,8 @@ def calculate_county(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+    node_attrs = copy.deepcopy(roadway_net.nodes_df.attrs)
 
     centroids_gdf = roadway_net.links_df.copy()
     centroids_gdf["geometry"] = centroids_gdf["geometry"].centroid
@@ -462,6 +474,9 @@ def calculate_county(
     WranglerLogger.info(
         "Finished Calculating county variable: {}".format(network_variable)
     )
+
+    roadway_net.links_df.attrs = link_attrs
+    roadway_net.nodes_df.attrs = node_attrs
 
     return roadway_net
 
@@ -551,6 +566,7 @@ def calculate_mpo(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
 
     mpo = roadway_net.links_df[county_network_variable].isin(mpo_counties)
 
@@ -562,6 +578,8 @@ def calculate_mpo(
     WranglerLogger.info(
         "Finished calculating MPO variable: {}".format(network_variable)
     )
+
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -655,6 +673,8 @@ def add_counts(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+
     WranglerLogger.debug(
         "Adding MNDOT Counts using \n- shst file: {}\n- shp file: {}\n- as network variable: {}".format(
             mndot_count_shst_data, mndot_count_variable_shp, network_variable
@@ -694,6 +714,8 @@ def add_counts(
     roadway_net.links_df["count_year"] = 2017
 
     WranglerLogger.info("Finished adding counts variable: {}".format(network_variable))
+
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -759,6 +781,8 @@ def calculate_hov(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+
     roadway_net.links_df[network_variable] = 0
 
     roadway_net.links_df.loc[
@@ -774,6 +798,8 @@ def calculate_hov(
     WranglerLogger.info(
         "Finished calculating hov variable: {}".format(network_variable)
     )
+
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -865,6 +891,8 @@ def calculate_number_of_lanes(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+
     WranglerLogger.debug("Calculating Centroid Connectors")
     calculate_centroidconnect(
         roadway_net=roadway_net,
@@ -933,6 +961,7 @@ def calculate_number_of_lanes(
     WranglerLogger.info(
         "Finished calculating number of lanes to: {}".format(network_variable)
     )
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -1025,6 +1054,8 @@ def calculate_number_of_lanes_from_reviewed_network(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+
     WranglerLogger.debug("Calculating Centroid Connectors")
     calculate_centroidconnect(
         roadway_net=roadway_net,
@@ -1100,6 +1131,8 @@ def calculate_number_of_lanes_from_reviewed_network(
     WranglerLogger.info(
         "Finished calculating number of lanes to: {}".format(network_variable)
     )
+
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -1319,6 +1352,7 @@ def calculate_assign_group_and_roadway_class(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
 
     WranglerLogger.debug("Calculating Centroid Connectors")
     calculate_centroidconnect(roadway_net=roadway_net, parameters=parameters)
@@ -1536,6 +1570,8 @@ def calculate_assign_group_and_roadway_class(
         )
     )
 
+    roadway_net.links_df.attrs = link_attrs
+
     return roadway_net
 
 
@@ -1658,6 +1694,7 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
 
     WranglerLogger.debug("Calculating Centroid Connectors")
     calculate_centroidconnect(roadway_net=roadway_net, parameters=parameters)
@@ -1817,6 +1854,8 @@ def calculate_assign_group_and_roadway_class_from_reviewed_network(
         )
     )
 
+    roadway_net.links_df.attrs = link_attrs
+
     return roadway_net
 
 
@@ -1908,6 +1947,8 @@ def calculate_centroidconnect(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_net.links_df.attrs)
+
     roadway_net.links_df[network_variable] = False
 
     roadway_net.links_df.loc[
@@ -1923,6 +1964,8 @@ def calculate_centroidconnect(
     WranglerLogger.info(
         "Finished calculating centroid connector variable: {}".format(network_variable)
     )
+
+    roadway_net.links_df.attrs = link_attrs
 
     return roadway_net
 
@@ -1999,6 +2042,8 @@ def add_centroid_and_centroid_connector(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_network.links_df.attrs)
+    node_attrs = copy.deepcopy(roadway_network.nodes_df.attrs)
 
     centroid_gdf = pd.read_pickle(centroid_file).to_crs(roadway_network.nodes_df.crs)
     centroid_connector_link_gdf = pd.read_pickle(centroid_connector_link_file).to_crs(
@@ -2093,6 +2138,9 @@ def add_centroid_and_centroid_connector(
 
     WranglerLogger.info("Finished adding centroid and centroid connectors")
 
+    roadway_network.links_df.attrs = link_attrs
+    roadway_network.nodes_df.attrs = node_attrs
+
     return roadway_network
 
 
@@ -2108,8 +2156,8 @@ def assign_link_id(roadway_network=None, add_links_df=None):
         add_links_df with unique link ids
 
     """
-
-    existing_max_id = roadway_network.links_df["model_link_id"].max()
+    existing_ids = roadway_network.links_df["model_link_id"].unique()
+    existing_max_id = max([id for id in existing_ids if id < 3000000])
 
     if "model_link_id" in add_links_df.columns:
         add_links_df.drop(["model_link_id"], axis=1, inplace=True)
@@ -2204,6 +2252,9 @@ def add_rail_links_and_nodes(
     """
     Start actual process
     """
+    link_attrs = copy.deepcopy(roadway_network.links_df.attrs)
+    node_attrs = copy.deepcopy(roadway_network.nodes_df.attrs)
+
     rail_links_gdf = gpd.read_file(rail_links_file)
     rail_nodes_gdf = gpd.read_file(rail_nodes_file)
 
@@ -2293,6 +2344,9 @@ def add_rail_links_and_nodes(
     if add_rail_ae_connections:
         roadway_network = add_rail_ae_connections(roadway_network)
 
+    roadway_network.links_df.attrs = link_attrs
+    roadway_network.nodes_df.attrs = node_attrs
+
     return roadway_network
 
 
@@ -2313,6 +2367,9 @@ def add_rail_ae_connections(roadway_network, parameters):
         )
         WranglerLogger.error(msg)
         raise ValueError(msg)
+
+    link_attrs = copy.deepcopy(roadway_network.links_df.attrs)
+    node_attrs = copy.deepcopy(roadway_network.nodes_df.attrs)
 
     WranglerLogger.info("Creating rail access and egress connection links")
     # add links between rail stops and the closest drive node
@@ -2445,5 +2502,8 @@ def add_rail_ae_connections(roadway_network, parameters):
             sort=False,
             ignore_index=True,
         )
+
+        roadway_network.links_df.attrs = link_attrs
+        roadway_network.nodes_df.attrs = node_attrs
 
         return roadway_network

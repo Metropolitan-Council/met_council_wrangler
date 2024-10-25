@@ -2350,7 +2350,11 @@ def add_rail_links_and_nodes(
     return roadway_network
 
 
-def add_rail_ae_connections(roadway_network, parameters):
+def add_rail_ae_connections(
+    roadway_network, 
+    parameters, 
+    exclude_rail_node_id=None
+):
     """
     add walk access and egress connectors to rail stations
     """
@@ -2368,6 +2372,9 @@ def add_rail_ae_connections(roadway_network, parameters):
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
+    if exclude_rail_node_id is None:
+        exclude_rail_node_id = []
+
     link_attrs = copy.deepcopy(roadway_network.links_df.attrs)
     node_attrs = copy.deepcopy(roadway_network.nodes_df.attrs)
 
@@ -2379,6 +2386,9 @@ def add_rail_ae_connections(roadway_network, parameters):
     rail_nodes_df = roadway_network.nodes_df[
         roadway_network.nodes_df.rail_only == True
     ].copy()
+
+    WranglerLogger.info(f"Exclude rail node id: {exclude_rail_node_id}")
+    rail_nodes_df = rail_nodes_df[~rail_nodes_df['model_node_id'].isin(exclude_rail_node_id)]
 
     drive_nodes_df = roadway_network.nodes_df[
         (roadway_network.nodes_df.drive_access == True)

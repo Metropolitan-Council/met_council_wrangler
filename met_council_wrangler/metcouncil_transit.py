@@ -1114,14 +1114,14 @@ def transit_standard_to_met_council_transit_network(
         WranglerLogger.error(msg)
         raise ValueError(msg)
 
-    tables = [
-        transit_net.feed.routes,
-        transit_net.feed.trips,
-        transit_net.feed.shapes, 
-        transit_net.feed.frequencies, 
-        transit_net.feed.stop_times
-    ]
-    fill_missing_values_in_column(
+    tables = {
+        'routes': transit_net.feed.routes,
+        'trips': transit_net.feed.trips,
+        'shapes': transit_net.feed.shapes, 
+        'frequencies': transit_net.feed.frequencies, 
+        'stop_times': transit_net.feed.stop_times
+    }
+    fill_missing_agency_name(
         tables, 
         column_name='agency_raw_name', 
         default_value=parameters.default_agency_raw_name
@@ -1138,17 +1138,38 @@ def transit_standard_to_met_council_transit_network(
     return transit_net
 
 
-def fill_missing_values_in_column(dataframes, column_name, default_value=0):
+def fill_missing_agency_name(dataframes, column_name, default_value=0):
     """
     Checks if a column has any missing values in the given list of DataFrames.
     If missing values are found, fills them with the default value.
 
     Args:
-    dataframes (list): List of DataFrames to check and update.
+    dataframes (dict): Dictionary of DataFrames to check and update.
     column_name (str): The column name to check for missing values.
     default_value: The value to assign to missing entries. Default is 0.
     """
-    for df in dataframes:
+
+    # fill in the existing values
+    trips_df = dataframes['trips']
+    shapes_df = dataframes['shapes']
+    frequencies_df = dataframes['frequencies']
+    stop_times_df = dataframes['stop_times']
+
+    shape_agency_xwalk = dict(zip(trips_df['shape_id'], trips_df[column_name]))
+    trip_agency_xwalk = dict(zip(trips_df['trip_id'], trips_df[column_name]))
+
+    shapes_df[column_name] = shapes_df.apply(
+        lambda row: shape_agency_xwalk[row['shape_id']] if pd.isna(row[column_name]) else row[column_name], axis=1
+    )
+    frequencies_df[column_name] = frequencies_df.apply(
+        lambda row: trip_agency_xwalk[row['trip_id']] if pd.isna(row[column_name]) else row[column_name], axis=1
+    )
+    stop_times_df[column_name] = stop_times_df.apply(
+        lambda row: trip_agency_xwalk[row['trip_id']] if pd.isna(row[column_name]) else row[column_name], axis=1
+    )
+
+    # fill in the default values for new records
+    for name, df in dataframes.items():
         if column_name in df.columns:
             if df[column_name].isnull().any():
                 df[column_name].fillna(default_value, inplace=True)

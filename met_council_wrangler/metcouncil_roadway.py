@@ -443,7 +443,16 @@ def calculate_county(
 
     county_gdf = gpd.read_file(county_shape)
     county_gdf = county_gdf.to_crs(epsg=parameters.crs_alt)
-    joined_gdf = gpd.sjoin(centroids_gdf, county_gdf, how="left", op="intersects")
+    if (int(gpd.__version__.split(".")[0]) == 0) & (
+        int(gpd.__version__.split(".")[1]) < 10
+    ):
+        joined_gdf = gpd.sjoin(
+            centroids_gdf, county_gdf, how="left", op="intersects"
+        )
+    else:
+        joined_gdf = gpd.sjoin(
+            centroids_gdf, county_gdf, how="left", predicate="intersects"
+        )
 
     joined_gdf[county_shape_variable] = (
         joined_gdf[county_shape_variable].map(county_codes_dict).fillna(10).astype(int)
@@ -452,7 +461,16 @@ def calculate_county(
     roadway_net.links_df[network_variable] = joined_gdf[county_shape_variable]
 
     nodes_gdf = roadway_net.nodes_df.copy()
-    joined_gdf = gpd.sjoin(nodes_gdf, county_gdf, how="left", op="intersects")
+    if (int(gpd.__version__.split(".")[0]) == 0) & (
+        int(gpd.__version__.split(".")[1]) < 10
+    ):
+        joined_gdf = gpd.sjoin(
+            nodes_gdf, county_gdf, how="left", op="intersects"
+        )
+    else:
+        joined_gdf = gpd.sjoin(
+            nodes_gdf, county_gdf, how="left", predicate="intersects"
+        )
 
     joined_gdf[county_shape_variable] = (
         joined_gdf[county_shape_variable].map(county_codes_dict).fillna(10).astype(int)

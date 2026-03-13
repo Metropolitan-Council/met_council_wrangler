@@ -84,7 +84,7 @@ def roadway_standard_to_met_council_network(
     else:
         WranglerLogger.info("Didn't detect managed lanes in network.")
 
-    roadway_net = calculate_distance_miles(roadway_net)
+    roadway_net = calculate_distance_miles(roadway_net, overwrite=True)
     roadway_net = create_ML_variable(roadway_net)
     roadway_net = create_hov_corridor_variable(roadway_net)
     roadway_net = create_managed_variable(roadway_net)

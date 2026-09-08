@@ -6,3 +6,4 @@ site/*
 
 .*
 !.gitignore
+!.github/

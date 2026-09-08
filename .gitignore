@@ -3,3 +3,6 @@
 
 # Local Docs Build
 site/*
+
+.*
+!.gitignore

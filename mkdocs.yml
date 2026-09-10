@@ -5,7 +5,7 @@ repo_url: https://github.com/Metropolitan-Council/met_council_wrangler
 use_directory_urls: false
 
 theme:
-  name: material
+  name: readthedocs
   features:
     - navigation.tabs
     - content.code.annotate
